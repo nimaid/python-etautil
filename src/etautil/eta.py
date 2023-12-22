@@ -40,7 +40,7 @@ class Eta:
     def _validate_index(self, index):
         self._validate_int(index, "Item index")
 
-        if index <= 0:
+        if index < 0:
             raise ValueError("Item index cannot be negative")
 
         if index > self.total_items - 1:
