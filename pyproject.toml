@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "etautil"
+version = "1.0.0"
+description = "A simple abstraction for computing and formatting time estimates."
+readme = "README_pypi.md"
+license= {file = "LICENSE"}
+authors = [
+    {name = "Ella Jameson", email = "ellagjameson@gmail.com"}
+]
+
+classifiers = []
+dependencies = []
+
+[project.urls]
+homepage = "https://github.com/nimaid/etautil"
+repository = "https://github.com/nimaid/etautil"
+issues = "https://github.com/nimaid/etautil/issues"
+
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
