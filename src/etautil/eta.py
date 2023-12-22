@@ -4,36 +4,115 @@ from .timestring import TimeString
 
 
 class Eta:
-    def __init__(self, total_items, start_time=None, verbose=False):
-        if start_time is None:
-            self.start_time = datetime.datetime.now()
-        else:
-            self.start_time = start_time
+    def __init__(self, total_items, start_time=None, verbose=False, percent_decimals=2):
+        self.total_items = None
+        self.set_total_items(total_items)
 
-        self.total_items = total_items
-        self.verbose = verbose
+        self.start_time = None
+        self.set_start_time(start_time)
+
+        self.verbose = None
+        self.set_verbose(verbose)
+
+        self.percent_decimals = None
+        self.set_percent_decimals(percent_decimals)
+
+    @staticmethod
+    def _validate_int(int_in, property_name):
+        if not isinstance(int_in, int):
+            raise ValueError(f"{property_name} must be an int")
+
+    @staticmethod
+    def _validate_bool(bool_in, property_name):
+        if not isinstance(bool_in, int):
+            raise ValueError(f"{property_name} must be a bool")
+
+    @staticmethod
+    def _validate_string(string_in, property_name):
+        if not isinstance(string_in, str):
+            raise ValueError(f"{property_name} must be a string")
+
+    @staticmethod
+    def _validate_datetime(date_time, property_name):
+        if not isinstance(date_time, datetime.datetime):
+            raise ValueError(f"{property_name} must be a datetime object")
+
+    def _validate_index(self, index):
+        self._validate_int(index, "Item index")
+
+        if index < 1:
+            raise ValueError("Unable to compute ETA for the first item (infinite time)")
+
+        if index > self.total_items:
+            raise IndexError("Item index is larger than the total items")
+
+    def _validate_total_items(self, total_items):
+        self._validate_int(total_items, "Total items")
+
+        if total_items < 2:
+            raise ValueError("Total items must be at least 2 to compute an ETA")
+
+    def _validate_percent_decimals(self, percent_decimals):
+        self._validate_bool(percent_decimals, "Percent decimals")
+
+        if percent_decimals < 0:
+            raise ValueError("Percent decimals must not be negative")
 
     def set_total_items(self, total_items):
+        self._validate_total_items(total_items)
+
         self.total_items = total_items
 
     def get_total_items(self):
         return self.total_items
 
+    def set_start_time(self, start_time=None):
+        if start_time is None:
+            self.start_time = datetime.datetime.now()
+        else:
+            self._validate_datetime(start_time, "Start time")
+
+            self.start_time = start_time
+
+    def get_start_time(self):
+        return self.start_time
+
+    def get_start_time_string(self):
+        if self.verbose:
+            return TimeString.DateTime.long(self.start_time)
+        else:
+            return TimeString.DateTime.short(self.start_time)
+
     def set_verbose(self, verbose):
+        if not isinstance(verbose, bool):
+            raise ValueError("Verbose setting must be a boolean value")
+
         self.verbose = verbose
 
     def get_verbose(self):
         return self.verbose
 
+    def set_percent_decimals(self, percent_decimals):
+        self._validate_percent_decimals(percent_decimals)
+
+        self.percent_decimals = percent_decimals
+
+    def get_percent_decimals(self):
+        return self.percent_decimals
+
     def get_time_taken(self, current_time=None):
         if current_time is None:
             current_time = datetime.datetime.now()
+
+        self._validate_datetime(current_time, "Current time")
 
         return current_time - self.start_time
 
     def get_time_taken_string(self, current_time=None):
         if current_time is None:
             current_time = datetime.datetime.now()
+
+        self._validate_datetime(current_time, "Current time")
 
         time_taken = self.get_time_taken(current_time)
 
@@ -43,11 +122,7 @@ class Eta:
             return TimeString.TimeDelta.short(time_taken)
 
     def get_eta_difference(self, current_item_index):
-        if current_item_index < 1:
-            raise ValueError("Unable to compute ETA for the first item (infinite time)")
-
-        if current_item_index > self.total_items:
-            raise IndexError("Item index is larger than the total items")
+        self._validate_index(current_item_index)
 
         current_time = datetime.datetime.now()
         time_taken = self.get_time_taken(current_time)
@@ -60,9 +135,13 @@ class Eta:
         return eta, eta_diff
 
     def get_eta(self, current_item_index):
+        self._validate_index(current_item_index)
+
         return self.get_eta_difference(current_item_index)[0]
 
     def get_eta_string(self, current_item_index):
+        self._validate_index(current_item_index)
+
         eta = self.get_eta(current_item_index)
 
         if self.verbose:
@@ -71,9 +150,13 @@ class Eta:
             return TimeString.DateTime.short(eta)
 
     def get_difference(self, current_item_index):
+        self._validate_index(current_item_index)
+
         return self.get_eta_difference(current_item_index)[1]
 
     def get_difference_string(self, current_item_index):
+        self._validate_index(current_item_index)
+
         difference = self.get_difference(current_item_index)
 
         if self.verbose:
@@ -81,27 +164,16 @@ class Eta:
         else:
             return TimeString.TimeDelta.short(difference)
 
-    def get_start_time(self):
-        return self.start_time
-
-    def get_start_time_string(self):
-        if self.verbose:
-            return TimeString.DateTime.long(self.start_time)
-        else:
-            return TimeString.DateTime.short(self.start_time)
-
     def get_percentage(self, current_item_index):
-        if current_item_index < 0:
-            raise ValueError("Item index cannot be less than 0")
-
-        if current_item_index > self.total_items:
-            raise IndexError("Item index is larger than the total items")
+        self._validate_index(current_item_index)
 
         return current_item_index / (self.total_items - 1)
 
-    def get_percentage_string(self, current_item_index, decimals=2):
+    def get_percentage_string(self, current_item_index):
+        self._validate_index(current_item_index)
+
         percentage = self.get_percentage(current_item_index) * 100
-        format_string = f"{{:.{decimals}f}}%"
+        format_string = f"{{:.{self.percent_decimals}f}}%"
         percent_string = format_string.format(percentage)
 
         if self.verbose:
@@ -109,8 +181,11 @@ class Eta:
 
         return percent_string
 
-    def get_progress_string(self, current_item_index, sep=" | ", percent_decimals=2):
-        percent_string = self.get_percentage_string(current_item_index, decimals=percent_decimals)
+    def get_progress_string(self, current_item_index, sep=" | "):
+        self._validate_index(current_item_index)
+        self._validate_string(sep, "Seperator")
+
+        percent_string = self.get_percentage_string(current_item_index)
 
         if current_item_index <= 0:
             return percent_string
