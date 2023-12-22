@@ -171,15 +171,12 @@ class Eta:
             return TimeString.TimeDelta.short(difference)
 
     def get_percentage(self, current_item_index):
-        self._validate_index_eta(current_item_index)
+        self._validate_index(current_item_index)
 
         return current_item_index / (self.total_items - 1)
 
     def get_percentage_string(self, current_item_index):
         self._validate_int(current_item_index, "Item index")
-
-        if current_item_index <= 0:
-            raise ValueError("Item index cannot be negative")
 
         percentage = self.get_percentage(current_item_index) * 100
         format_string = f"{{:.{self.percent_decimals}f}}%"
