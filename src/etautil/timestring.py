@@ -23,8 +23,11 @@ class TimeString:
 
             time_parts = TimeString.split_seconds(round(time_in.total_seconds()))
 
-            time_string = f"{time_parts['h']}H:{time_parts['m']:02}M:{time_parts['s']:02}S"
-
+            time_string = f"{time_parts['s']:02}S"
+            if time_parts["m"] > 0 or time_parts["h"] > 0 or time_parts["d"] > 0:
+                time_string = f"{time_parts['m']:02}M:{time_string}"
+            if time_parts["h"] > 0 or time_parts["d"] > 0:
+                time_string = f"{time_parts['h']}H:{time_string}"
             if time_parts["d"] > 0:
                 time_string = f"{time_parts['d']}D:{time_string}"
 
