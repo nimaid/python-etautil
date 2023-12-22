@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "{[name]}"
+version = "{[version]}"
+description = "{[description]}"
+readme = "README_pypi.md"
+license= {file = "LICENSE"}
+authors = [
+    {name = "{[author]}", email = "{[author_email]}"}
+]
+
+classifiers = []
+dependencies = [
+    "pyyaml"
+]
+
+[project.urls]
+homepage = "https://github.com/{[author_username]}/{[name]}"
+repository = "https://github.com/{[author_username]}/{[name]}"
+issues = "https://github.com/{[author_username]}/{[name]}/issues"
+
+
+[project.scripts]
+{[name]} = "{[module_name]}:run"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
