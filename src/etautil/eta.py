@@ -43,8 +43,8 @@ class Eta:
         if index < 1:
             raise ValueError("Unable to compute ETA for the first item (infinite time)")
 
-        if index > self.total_items:
-            raise IndexError("Item index is larger than the total items")
+        if index > self.total_items - 1:
+            raise IndexError("Item index is larger than the total items - 1")
 
     def _validate_total_items(self, total_items):
         self._validate_int(total_items, "Total items")
