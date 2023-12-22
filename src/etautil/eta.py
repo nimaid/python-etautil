@@ -16,13 +16,13 @@ class Eta:
     def set_total_items(self, total_items):
         self.total_items = total_items
 
-    def get_total_items(self, total_items):
+    def get_total_items(self):
         return self.total_items
 
     def set_verbose(self, verbose):
         self.verbose = verbose
 
-    def get_verbose(self, verbose):
+    def get_verbose(self):
         return self.verbose
 
     def get_time_taken(self, current_time=None):
