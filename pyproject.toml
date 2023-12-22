@@ -4,9 +4,9 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "etautil"
-version = "1.0.4"
+version = "1.0.5"
 description = "A simple abstraction for computing and formatting time estimates."
-readme = "README_pypi.md"
+readme = "README.md"
 license= {file = "LICENSE"}
 authors = [
     {name = "Ella Jameson", email = "ellagjameson@gmail.com"}
