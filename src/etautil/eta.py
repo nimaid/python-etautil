@@ -201,8 +201,10 @@ class Eta:
         if self.verbose:
             difference_string = TimeString.TimeDelta.long(difference)
             eta_string = TimeString.DateTime.long(eta)
+
+            return sep.join((percent_string, f"Time remaining: {difference_string}", f"ETA: {eta_string}"))
         else:
             difference_string = TimeString.TimeDelta.short(difference)
             eta_string = TimeString.DateTime.short(eta)
 
-        return sep.join((percent_string, f"Time remaining: {difference_string}", f"ETA: {eta_string}"))
+            return sep.join((percent_string, difference_string, eta_string))
