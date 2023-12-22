@@ -40,11 +40,17 @@ class Eta:
     def _validate_index(self, index):
         self._validate_int(index, "Item index")
 
-        if index < 1:
-            raise ValueError("Unable to compute ETA for the first item (infinite time)")
+        if index <= 0:
+            raise ValueError("Item index cannot be negative")
 
         if index > self.total_items - 1:
             raise IndexError("Item index is larger than the total items - 1")
+
+    def _validate_index_eta(self, index):
+        self._validate_index(index)
+
+        if index < 1:
+            raise ValueError("Unable to compute ETA for the first item (infinite time)")
 
     def _validate_total_items(self, total_items):
         self._validate_int(total_items, "Total items")
@@ -122,7 +128,7 @@ class Eta:
             return TimeString.TimeDelta.short(time_taken)
 
     def get_eta_difference(self, current_item_index):
-        self._validate_index(current_item_index)
+        self._validate_index_eta(current_item_index)
 
         current_time = datetime.datetime.now()
         time_taken = self.get_time_taken(current_time)
@@ -135,12 +141,12 @@ class Eta:
         return eta, eta_diff
 
     def get_eta(self, current_item_index):
-        self._validate_index(current_item_index)
+        self._validate_index_eta(current_item_index)
 
         return self.get_eta_difference(current_item_index)[0]
 
     def get_eta_string(self, current_item_index):
-        self._validate_index(current_item_index)
+        self._validate_index_eta(current_item_index)
 
         eta = self.get_eta(current_item_index)
 
@@ -150,12 +156,12 @@ class Eta:
             return TimeString.DateTime.short(eta)
 
     def get_difference(self, current_item_index):
-        self._validate_index(current_item_index)
+        self._validate_index_eta(current_item_index)
 
         return self.get_eta_difference(current_item_index)[1]
 
     def get_difference_string(self, current_item_index):
-        self._validate_index(current_item_index)
+        self._validate_index_eta(current_item_index)
 
         difference = self.get_difference(current_item_index)
 
@@ -165,12 +171,15 @@ class Eta:
             return TimeString.TimeDelta.short(difference)
 
     def get_percentage(self, current_item_index):
-        self._validate_index(current_item_index)
+        self._validate_index_eta(current_item_index)
 
         return current_item_index / (self.total_items - 1)
 
     def get_percentage_string(self, current_item_index):
-        self._validate_index(current_item_index)
+        self._validate_int(current_item_index, "Item index")
+
+        if current_item_index <= 0:
+            raise ValueError("Item index cannot be negative")
 
         percentage = self.get_percentage(current_item_index) * 100
         format_string = f"{{:.{self.percent_decimals}f}}%"
