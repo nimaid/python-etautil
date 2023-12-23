@@ -19,32 +19,32 @@ class Eta:
         self.set_percent_decimals(percent_decimals)
 
     @staticmethod
-    def _validate_total_items(total_items):
+    def __validate_total_items(total_items):
         Validate.is_type(total_items, int, "Total items")
 
         if total_items < 2:
             raise ValueError("Total items must be at least 2 to compute an ETA")
 
     @staticmethod
-    def _validate_percent_decimals(percent_decimals):
+    def __validate_percent_decimals(percent_decimals):
         Validate.is_type(percent_decimals, int, "Percent decimals")
         Validate.is_positive(percent_decimals, "Percent decimals")
 
-    def _validate_index(self, index):
+    def __validate_index(self, index):
         Validate.is_type(index, int, "Item index")
         Validate.is_positive(index, "Item index")
 
         if index > self.total_items - 1:
             raise IndexError("Item index is larger than the total items - 1")
 
-    def _validate_index_eta(self, index):
-        self._validate_index(index)
+    def __validate_index_eta(self, index):
+        self.__validate_index(index)
 
         if index < 1:
             raise ValueError("Unable to compute ETA for the first item (infinite time)")
 
     def set_total_items(self, total_items):
-        self._validate_total_items(total_items)
+        self.__validate_total_items(total_items)
 
         self.total_items = total_items
 
@@ -78,7 +78,7 @@ class Eta:
         return self.verbose
 
     def set_percent_decimals(self, percent_decimals):
-        self._validate_percent_decimals(percent_decimals)
+        self.__validate_percent_decimals(percent_decimals)
 
         self.percent_decimals = percent_decimals
 
@@ -107,7 +107,7 @@ class Eta:
             return TimeString.TimeDelta.short(time_taken)
 
     def get_eta_difference(self, current_item_index):
-        self._validate_index_eta(current_item_index)
+        self.__validate_index_eta(current_item_index)
 
         current_time = datetime.datetime.now()
         time_taken = self.get_time_taken(current_time)
@@ -120,12 +120,12 @@ class Eta:
         return eta, eta_diff
 
     def get_eta(self, current_item_index):
-        self._validate_index_eta(current_item_index)
+        self.__validate_index_eta(current_item_index)
 
         return self.get_eta_difference(current_item_index)[0]
 
     def get_eta_string(self, current_item_index):
-        self._validate_index_eta(current_item_index)
+        self.__validate_index_eta(current_item_index)
 
         eta = self.get_eta(current_item_index)
 
@@ -135,12 +135,12 @@ class Eta:
             return TimeString.DateTime.short(eta)
 
     def get_difference(self, current_item_index):
-        self._validate_index_eta(current_item_index)
+        self.__validate_index_eta(current_item_index)
 
         return self.get_eta_difference(current_item_index)[1]
 
     def get_difference_string(self, current_item_index):
-        self._validate_index_eta(current_item_index)
+        self.__validate_index_eta(current_item_index)
 
         difference = self.get_difference(current_item_index)
 
@@ -150,7 +150,7 @@ class Eta:
             return TimeString.TimeDelta.short(difference)
 
     def get_percentage(self, current_item_index):
-        self._validate_index(current_item_index)
+        self.__validate_index(current_item_index)
 
         return current_item_index / (self.total_items - 1)
 
@@ -167,7 +167,7 @@ class Eta:
         return percent_string
 
     def get_progress_string(self, current_item_index, sep=" | "):
-        self._validate_index(current_item_index)
+        self.__validate_index(current_item_index)
         Validate.is_type(sep, str, "Seperator")
 
         percent_string = self.get_percentage_string(current_item_index)

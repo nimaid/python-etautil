@@ -9,7 +9,7 @@ class Validate:
         """Validate if a value is a string object.
 
         :param value: The value to be tested.
-        :param [str] value_name: The name of the value, used in the error message.
+        :param str value_name: The name of the value, used in the error message.
         :raises TypeError: Raised when the value name isn't a string object.
         :raises TypeError: Raised when the value isn't a string object.
         :return: Nothing.
@@ -26,7 +26,7 @@ class Validate:
         """ Validate if a value is not empty (None, "", [], False).
 
         :param value: The value to be tested.
-        :param [str] value_name: The name of the value, used in the error message.
+        :param str value_name: The name of the value, used in the error message.
         :raises ValueError: Raised when the value is empty.
         :return: Nothing.
         :rtype: None
@@ -40,7 +40,7 @@ class Validate:
     def value_name(value_name: str) -> None:
         """ Validate if a value name is valid.
 
-        :param [str] value_name: The value name to be tested.
+        :param str value_name: The value name to be tested.
         :return: Nothing.
         :rtype: None
         """
@@ -52,8 +52,8 @@ class Validate:
         """Validate if a value matches a specified type.
 
         :param value: The value to be tested.
-        :param [type] value_type: The type to test for.
-        :param [str] value_name: The name of the value, used in the error message.
+        :param type value_type: The type to test for.
+        :param str value_name: The name of the value, used in the error message.
         :raises TypeError: Raised when the value type isn't a type object.
         :raises TypeError: Raised when the value name isn't a str object.
         :raises TypeError: Raised when the type(value) does not match the value type.
@@ -94,8 +94,7 @@ class Validate:
         """Validate if a value is not negative.
 
         :param value: The value to be tested.
-        :param value_name: The name of the value, used in the error message.
-        :type value_name: str
+        :param str value_name: The name of the value, used in the error message.
         :raises ValueError: Raised when the value is less than zero.
         :return: Nothing.
         :rtype: None

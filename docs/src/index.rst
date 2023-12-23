@@ -7,12 +7,7 @@ ETA Utility Documentation
 ===================================
 
 .. toctree::
-   :maxdepth: 3
-
-
-
-Indices and tables
-==================
+   :maxdepth: 4
 
 * :ref:`genindex`
 * :ref:`modindex`
