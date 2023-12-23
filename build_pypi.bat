@@ -6,16 +6,18 @@ set BUILDENVNAME=build
 set ORIGDIR=%CD%
 set DISTDIR=%ORIGDIR%\dist
 
+call conda activate %BUILDENVNAME%
+
 echo Cleaning up before making release...
 del /f /s /q "%DISTDIR%" 1>nul 2>&1
 rmdir /s /q "%DISTDIR%" 1>nul 2>&1
 
 echo Making PyPI release...
-call conda run -n %BUILDENVNAME% python -m build
+python -m build
 if errorlevel 1 goto ERROR
 
 echo Uploading to PyPI
-call conda run -n %BUILDENVNAME% twine upload "%DISTDIR%"\*
+twine upload "%DISTDIR%"\*
 if errorlevel 1 goto ERROR
 
 goto DONE
@@ -23,10 +25,12 @@ goto DONE
 
 :ERROR
 cd %ORIGDIR%
+call conda deactivate
 echo Build failed!
 exit /B 1
 
 :DONE
 cd %ORIGDIR%
+call conda deactivate
 echo Build done!
 exit /B 0

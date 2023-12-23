@@ -1,5 +1,8 @@
 @ECHO OFF
 
+set BUILDENVNAME=build
+
+call conda activate %BUILDENVNAME%
 pushd %~dp0
 
 REM Command file for Sphinx documentation
@@ -33,3 +36,4 @@ goto end
 
 :end
 popd
+call conda deactivate
