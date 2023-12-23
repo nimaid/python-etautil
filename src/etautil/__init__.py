@@ -63,6 +63,18 @@ class Eta:
             class Config:
                 arbitrary_types_allowed = True
 
+            @_pydantic.field_validator("*", mode="before")
+            @classmethod
+            def use_default_value(cls, value: _typing.Any, info: _pydantic.FieldValidationInfo) -> _typing.Any:
+                if (
+                        cls.model_fields[info.field_name].get_default() is not _pydantic_core.PydanticUndefined
+                        and not cls.model_fields[info.field_name].is_required()
+                        and value is None
+                ):
+                    return cls.model_fields[info.field_name].get_default()
+                else:
+                    return value
+
         params = Params(
             start_time=start_time
         )
@@ -117,9 +129,23 @@ class Eta:
             class Config:
                 arbitrary_types_allowed = True
 
+            @_pydantic.field_validator("*", mode="before")
+            @classmethod
+            def use_default_value(cls, value: _typing.Any, info: _pydantic.FieldValidationInfo) -> _typing.Any:
+                if (
+                        cls.model_fields[info.field_name].get_default() is not _pydantic_core.PydanticUndefined
+                        and not cls.model_fields[info.field_name].is_required()
+                        and value is None
+                ):
+                    return cls.model_fields[info.field_name].get_default()
+                else:
+                    return value
+
         params = Params(
             current_time=current_time
         )
+
+        assert params.current_time is not None
 
         return params.current_time - self.start_time
 
@@ -130,16 +156,30 @@ class Eta:
         now = _pendulum.now()
 
         class Params(_pydantic.BaseModel):
-            current_item_index: _pydantic.PositiveInt = _pydantic.Field(None, ge=1)
+            current_item_index: _pydantic.PositiveInt = _pydantic.Field(None, ge=1, le=(self.total_items - 1))
             current_time: _typing.Optional[_pendulum.DateTime] = now
 
             class Config:
                 arbitrary_types_allowed = True
 
+            @_pydantic.field_validator("*", mode="before")
+            @classmethod
+            def use_default_value(cls, value: _typing.Any, info: _pydantic.FieldValidationInfo) -> _typing.Any:
+                if (
+                        cls.model_fields[info.field_name].get_default() is not _pydantic_core.PydanticUndefined
+                        and not cls.model_fields[info.field_name].is_required()
+                        and value is None
+                ):
+                    return cls.model_fields[info.field_name].get_default()
+                else:
+                    return value
+
         params = Params(
             current_item_index=current_item_index,
             current_time=current_time
         )
+
+        assert params.current_time is not None
 
         time_taken = self.get_time_taken(params.current_time)
         percent_done = self.get_percentage(params.current_item_index)
@@ -159,15 +199,29 @@ class Eta:
             class Config:
                 arbitrary_types_allowed = True
 
+            @_pydantic.field_validator("*", mode="before")
+            @classmethod
+            def use_default_value(cls, value: _typing.Any, info: _pydantic.FieldValidationInfo) -> _typing.Any:
+                if (
+                        cls.model_fields[info.field_name].get_default() is not _pydantic_core.PydanticUndefined
+                        and not cls.model_fields[info.field_name].is_required()
+                        and value is None
+                ):
+                    return cls.model_fields[info.field_name].get_default()
+                else:
+                    return value
+
         params = Params(
             current_time=current_time
         )
+
+        assert params.current_time is not None
 
         eta_diff = self.get_difference(
             current_item_index=current_item_index,
             current_time=params.current_time
         )
-        eta = current_time + eta_diff
+        eta = params.current_time + eta_diff
 
         return eta
 
@@ -176,7 +230,7 @@ class Eta:
 
     def get_percentage(self, current_item_index):
         class Params(_pydantic.BaseModel):
-            current_item_index: _pydantic.PositiveInt = _pydantic.Field(None, ge=1)
+            current_item_index: _pydantic.PositiveInt = _pydantic.Field(None, ge=1, le=(self.total_items - 1))
 
         params = Params(
             current_item_index=current_item_index,
@@ -186,7 +240,7 @@ class Eta:
 
     def get_percentage_string(self, current_item_index):
         class Params(_pydantic.BaseModel):
-            current_item_index: _pydantic.PositiveInt = _pydantic.Field(None, ge=1)
+            current_item_index: _pydantic.PositiveInt = _pydantic.Field(None, ge=1, le=(self.total_items - 1))
 
         params = Params(
             current_item_index=current_item_index,
@@ -203,7 +257,7 @@ class Eta:
 
     def get_progress_string(self, current_item_index, sep=" | "):
         class Params(_pydantic.BaseModel):
-            current_item_index: _pydantic.PositiveInt = _pydantic.Field(None, ge=1)
+            current_item_index: _pydantic.PositiveInt = _pydantic.Field(None, ge=1, le=(self.total_items - 1))
             sep: str
 
         params = Params(
@@ -216,7 +270,7 @@ class Eta:
         if params.current_item_index <= 0:
             return percent_string
 
-        difference_string = self.get_percentage_string(params.current_item_index)
+        difference_string = self.get_difference_string(params.current_item_index)
         eta_string = self.get_eta_string(params.current_item_index)
         if self.verbose:
             return params.sep.join([percent_string, f"Time remaining: {difference_string}", f"ETA: {eta_string}"])
