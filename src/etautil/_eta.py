@@ -21,12 +21,12 @@ class NoneDefaultModel(pydantic.BaseModel):
 class Eta:
     """A simple abstraction for computing and formatting time estimates.
 
-    :param int total_items: The total number of items to process.
-    :param pendulum.DateTime start_time: The start time, defaults to the current time.
-    :param bool verbose: If True, strings are more verbose.
-    :param int percent_decimals: The number of decimal places in the percent string.
-    :raises pydantic.ValueError: Raised when a parameter is invalid.
-    :return: An Eta abstraction object.
+    :param int total_items: The total number of items to process, used in computations.
+    :param pendulum.DateTime start_time: The starting time used in all calculations, defaults to the current time.
+    :param bool verbose: If we should make strings verbosely or not.
+    :param int percent_decimals: The number of decimal places to use in the percentage string.
+    :raises pydantic.ValidationError: Raised when a parameter is invalid.
+    :return: A new Eta abstraction object.
     :rtype: Eta
     """
     def __init__(self,
@@ -36,27 +36,27 @@ class Eta:
                  percent_decimals: int = 2
                  ):
 
-        #: The total number of items to process, used in computations.
         self.total_items = None
         self.set_total_items(total_items)
 
-        #: The starting time used in all calculations.
         self.start_time = None
         self.set_start_time(start_time)
 
-        #: If we should print verbosely or not.
         self.verbose = None
         #: The format string to use for DateTime, based on self.verbose.
         self.datetime_format = None
         self.set_verbose(verbose)
 
-        #: The number of decimal places to use in the percentage string.
         self.percent_decimals = None
         self.set_percent_decimals(percent_decimals)
 
+    def set_total_items(self, total_items: int) -> None:
+        """Set the total number of items to process.
 
-
-    def set_total_items(self, total_items):
+        :param int total_items: The total number of items to process, used in computations.
+        :raises pydantic.ValidationError: Raised when a parameter is invalid.
+        :rtype: None
+        """
         class Params(pydantic.BaseModel):
             total_items: pydantic.PositiveInt = pydantic.Field(None, ge=2)
 
@@ -66,10 +66,15 @@ class Eta:
 
         self.total_items = params.total_items
 
-    def get_total_items(self):
+    def get_total_items(self) -> int:
+        """Get the total number of items to process.
+
+        :return: The total number of items to process, used in computations.
+        :rtype: int
+        """
         return self.total_items
 
-    def set_start_time(self, start_time=None):
+    def set_start_time(self, start_time: pendulum.DateTime = None) -> None:
         now = pendulum.now()
 
         class Params(NoneDefaultModel):
@@ -86,13 +91,13 @@ class Eta:
 
         self.start_time = params.start_time
 
-    def get_start_time(self):
+    def get_start_time(self) -> pendulum.DateTime:
         return self.start_time
 
-    def get_start_time_string(self):
+    def get_start_time_string(self) -> str:
         return self.start_time.format(self.datetime_format)
 
-    def set_verbose(self, verbose):
+    def set_verbose(self, verbose: bool) -> None:
         class Params(pydantic.BaseModel):
             verbose: bool
 
@@ -110,7 +115,7 @@ class Eta:
     def get_verbose(self):
         return self.verbose
 
-    def set_percent_decimals(self, percent_decimals):
+    def set_percent_decimals(self, percent_decimals: int) -> None:
         class Params(pydantic.BaseModel):
             percent_decimals: pydantic.PositiveInt
 

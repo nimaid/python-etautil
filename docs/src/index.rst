@@ -9,4 +9,4 @@ ETA Utility Documentation
 .. toctree::
    :maxdepth: 4
 
-   genindex
+* :ref:`genindex`
