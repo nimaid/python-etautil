@@ -6,6 +6,10 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
+import os
+import sys
+sys.path.insert(0, os.path.realpath("."))
+
 project = 'etautil'
 copyright = '2023, Ella Jameson'
 author = 'Ella Jameson'
@@ -13,7 +17,14 @@ author = 'Ella Jameson'
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = []
+extensions = [
+    'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
+    'autoapi.extension'
+]
+autoapi_dirs = ['.', 'etautil']
+
+autosummary_generate = True  # Turn on sphinx.ext.autosummary
 
 templates_path = ['_templates']
 exclude_patterns = []

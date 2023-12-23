@@ -154,3 +154,4 @@ cython_debug/
 *.exe
 /docs/doctrees/
 /docs/singlehtml/
+/docs/html/
