@@ -1,3 +1,5 @@
+# TODO: Replace entirely with pydantic
+
 """Provides tools to validate parameters of functions."""
 import numbers
 

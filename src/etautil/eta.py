@@ -1,6 +1,5 @@
-import datetime
+import pendulum
 
-from .timestring import TimeString
 from .validate import Validate
 
 
@@ -13,6 +12,7 @@ class Eta:
         self.set_start_time(start_time)
 
         self.verbose = None
+        self.datetime_format = None
         self.set_verbose(verbose)
 
         self.percent_decimals = None
@@ -53,9 +53,9 @@ class Eta:
 
     def set_start_time(self, start_time=None):
         if start_time is None:
-            self.start_time = datetime.datetime.now()
+            self.start_time = pendulum.now()
         else:
-            Validate.is_type(start_time, datetime.datetime, "Start time")
+            Validate.is_type(start_time, pendulum.DateTime, "Start time")
 
             self.start_time = start_time
 
@@ -63,16 +63,18 @@ class Eta:
         return self.start_time
 
     def get_start_time_string(self):
-        if self.verbose:
-            return TimeString.DateTime.long(self.start_time)
-        else:
-            return TimeString.DateTime.short(self.start_time)
+        return self.start_time.format(self.datetime_format)
 
     def set_verbose(self, verbose):
         if not isinstance(verbose, bool):
             raise ValueError("Verbose setting must be a boolean value")
 
         self.verbose = verbose
+
+        if self.verbose:
+            self.datetime_format = "dddd, MMMM Do, YYYY @ h:mm:ss A Z"
+        else:
+            self.datetime_format = "YYYY/MM/DD @ h:mm:ss A"
 
     def get_verbose(self):
         return self.verbose
@@ -87,29 +89,26 @@ class Eta:
 
     def get_time_taken(self, current_time=None):
         if current_time is None:
-            current_time = datetime.datetime.now()
+            current_time = pendulum.now()
 
-        Validate.is_type(current_time, datetime.datetime, "Current time")
+        Validate.is_type(current_time, pendulum.DateTime, "Current time")
 
         return current_time - self.start_time
 
     def get_time_taken_string(self, current_time=None):
         if current_time is None:
-            current_time = datetime.datetime.now()
+            current_time = pendulum.now()
 
-        Validate.is_type(current_time, datetime.datetime, "Current time")
+        Validate.is_type(current_time, pendulum.DateTime, "Current time")
 
         time_taken = self.get_time_taken(current_time)
 
-        if self.verbose:
-            return TimeString.TimeDelta.long(time_taken)
-        else:
-            return TimeString.TimeDelta.short(time_taken)
+        return time_taken.in_words()
 
     def get_eta_difference(self, current_item_index):
         self.__validate_index_eta(current_item_index)
 
-        current_time = datetime.datetime.now()
+        current_time = pendulum.now()
         time_taken = self.get_time_taken(current_time)
         percent_done = self.get_percentage(current_item_index)
 
@@ -129,10 +128,7 @@ class Eta:
 
         eta = self.get_eta(current_item_index)
 
-        if self.verbose:
-            return TimeString.DateTime.long(eta)
-        else:
-            return TimeString.DateTime.short(eta)
+        return eta.format(self.datetime_format)
 
     def get_difference(self, current_item_index):
         self.__validate_index_eta(current_item_index)
@@ -144,10 +140,7 @@ class Eta:
 
         difference = self.get_difference(current_item_index)
 
-        if self.verbose:
-            return TimeString.TimeDelta.long(difference)
-        else:
-            return TimeString.TimeDelta.short(difference)
+        return difference.in_words()
 
     def get_percentage(self, current_item_index):
         self.__validate_index(current_item_index)
@@ -177,13 +170,9 @@ class Eta:
 
         eta, difference = self.get_eta_difference(current_item_index)
 
+        difference_string = difference.in_words()
+        eta_string = eta.format(self.datetime_format)
         if self.verbose:
-            difference_string = TimeString.TimeDelta.long(difference)
-            eta_string = TimeString.DateTime.long(eta)
-
             return sep.join((percent_string, f"Time remaining: {difference_string}", f"ETA: {eta_string}"))
         else:
-            difference_string = TimeString.TimeDelta.short(difference)
-            eta_string = TimeString.DateTime.short(eta)
-
             return sep.join((percent_string, difference_string, eta_string))
