@@ -41,6 +41,19 @@ class Eta:
         self.percent_decimals = None
         self.set_percent_decimals(percent_decimals)
 
+    class _NoneDefaultModel(_pydantic.BaseModel):
+        @_pydantic.field_validator("*", mode="before")
+        @classmethod
+        def use_default_value(cls, value: _typing.Any, info: _pydantic.FieldValidationInfo) -> _typing.Any:
+            if (
+                    cls.model_fields[info.field_name].get_default() is not _pydantic_core.PydanticUndefined
+                    and not cls.model_fields[info.field_name].is_required()
+                    and value is None
+            ):
+                return cls.model_fields[info.field_name].get_default()
+            else:
+                return value
+
     def set_total_items(self, total_items):
         class Params(_pydantic.BaseModel):
             total_items: _pydantic.PositiveInt = _pydantic.Field(None, ge=2)
@@ -57,23 +70,11 @@ class Eta:
     def set_start_time(self, start_time=None):
         now = _pendulum.now()
 
-        class Params(_pydantic.BaseModel):
+        class Params(self._NoneDefaultModel):
             start_time: _typing.Optional[_pendulum.DateTime] = now
 
             class Config:
                 arbitrary_types_allowed = True
-
-            @_pydantic.field_validator("*", mode="before")
-            @classmethod
-            def use_default_value(cls, value: _typing.Any, info: _pydantic.FieldValidationInfo) -> _typing.Any:
-                if (
-                        cls.model_fields[info.field_name].get_default() is not _pydantic_core.PydanticUndefined
-                        and not cls.model_fields[info.field_name].is_required()
-                        and value is None
-                ):
-                    return cls.model_fields[info.field_name].get_default()
-                else:
-                    return value
 
         params = Params(
             start_time=start_time
@@ -123,23 +124,11 @@ class Eta:
     def get_time_taken(self, current_time=None):
         now = _pendulum.now()
 
-        class Params(_pydantic.BaseModel):
+        class Params(self._NoneDefaultModel):
             current_time: _typing.Optional[_pendulum.DateTime] = now
 
             class Config:
                 arbitrary_types_allowed = True
-
-            @_pydantic.field_validator("*", mode="before")
-            @classmethod
-            def use_default_value(cls, value: _typing.Any, info: _pydantic.FieldValidationInfo) -> _typing.Any:
-                if (
-                        cls.model_fields[info.field_name].get_default() is not _pydantic_core.PydanticUndefined
-                        and not cls.model_fields[info.field_name].is_required()
-                        and value is None
-                ):
-                    return cls.model_fields[info.field_name].get_default()
-                else:
-                    return value
 
         params = Params(
             current_time=current_time
@@ -155,24 +144,12 @@ class Eta:
     def get_difference(self, current_item_index, current_time=None):
         now = _pendulum.now()
 
-        class Params(_pydantic.BaseModel):
+        class Params(self._NoneDefaultModel):
             current_item_index: _pydantic.PositiveInt = _pydantic.Field(None, ge=1, le=(self.total_items - 1))
             current_time: _typing.Optional[_pendulum.DateTime] = now
 
             class Config:
                 arbitrary_types_allowed = True
-
-            @_pydantic.field_validator("*", mode="before")
-            @classmethod
-            def use_default_value(cls, value: _typing.Any, info: _pydantic.FieldValidationInfo) -> _typing.Any:
-                if (
-                        cls.model_fields[info.field_name].get_default() is not _pydantic_core.PydanticUndefined
-                        and not cls.model_fields[info.field_name].is_required()
-                        and value is None
-                ):
-                    return cls.model_fields[info.field_name].get_default()
-                else:
-                    return value
 
         params = Params(
             current_item_index=current_item_index,
@@ -193,23 +170,11 @@ class Eta:
     def get_eta(self, current_item_index, current_time=None):
         now = _pendulum.now()
 
-        class Params(_pydantic.BaseModel):
+        class Params(self._NoneDefaultModel):
             current_time: _typing.Optional[_pendulum.DateTime] = now
 
             class Config:
                 arbitrary_types_allowed = True
-
-            @_pydantic.field_validator("*", mode="before")
-            @classmethod
-            def use_default_value(cls, value: _typing.Any, info: _pydantic.FieldValidationInfo) -> _typing.Any:
-                if (
-                        cls.model_fields[info.field_name].get_default() is not _pydantic_core.PydanticUndefined
-                        and not cls.model_fields[info.field_name].is_required()
-                        and value is None
-                ):
-                    return cls.model_fields[info.field_name].get_default()
-                else:
-                    return value
 
         params = Params(
             current_time=current_time
