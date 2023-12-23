@@ -1,11 +1,16 @@
+"""Provides tools to format time-based objects into strings."""
 import datetime
 
 from .validate import Validate
 
 
 class TimeString:
+    """Container class with methods to process time-based objects and return human-readable strings."""
     @staticmethod
     def split_seconds(seconds_in):
+        """Splits a seconds into days, hours, minutes, and seconds, and returns a dictionary with those values."""
+        Validate.is_positive(seconds_in, "Seconds in")
+
         days, remainder = divmod(seconds_in, (60 ** 2) * 24)
         hours, remainder = divmod(remainder, 60 ** 2)
         minutes, seconds = divmod(remainder, 60)
@@ -20,7 +25,7 @@ class TimeString:
     class TimeDelta:
         @staticmethod
         def short(timedelta_in):
-            Validate.type(timedelta_in, datetime.timedelta, "Input time")
+            Validate.is_type(timedelta_in, datetime.timedelta, "Input time")
 
             if timedelta_in < datetime.timedelta(0):
                 timedelta_in = datetime.timedelta(0)
@@ -39,7 +44,7 @@ class TimeString:
 
         @staticmethod
         def long(timedelta_in):
-            Validate.type(timedelta_in, datetime.timedelta, "Input time")
+            Validate.is_type(timedelta_in, datetime.timedelta, "Input time")
 
             if timedelta_in < datetime.timedelta(0):
                 timedelta_in = datetime.timedelta(0)
@@ -77,7 +82,7 @@ class TimeString:
     class DateTime:
         @staticmethod
         def short(datetime_in):
-            Validate.type(datetime_in, datetime.datetime, "Input time")
+            Validate.is_type(datetime_in, datetime.datetime, "Input time")
 
             now = datetime.datetime.now()
             if datetime_in.day != now.day or datetime_in.year != now.year:
@@ -87,7 +92,7 @@ class TimeString:
 
         @staticmethod
         def long(datetime_in):
-            Validate.type(datetime_in, datetime.datetime, "Input time")
+            Validate.is_type(datetime_in, datetime.datetime, "Input time")
 
             now = datetime.datetime.now()
             if datetime_in.day != now.day or datetime_in.year != now.year:

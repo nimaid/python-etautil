@@ -20,19 +20,19 @@ class Eta:
 
     @staticmethod
     def _validate_total_items(total_items):
-        Validate.type(total_items, int, "Total items")
+        Validate.is_type(total_items, int, "Total items")
 
         if total_items < 2:
             raise ValueError("Total items must be at least 2 to compute an ETA")
 
     @staticmethod
     def _validate_percent_decimals(percent_decimals):
-        Validate.type(percent_decimals, int, "Percent decimals")
-        Validate.positive(percent_decimals, "Percent decimals")
+        Validate.is_type(percent_decimals, int, "Percent decimals")
+        Validate.is_positive(percent_decimals, "Percent decimals")
 
     def _validate_index(self, index):
-        Validate.type(index, int, "Item index")
-        Validate.positive(index, "Item index")
+        Validate.is_type(index, int, "Item index")
+        Validate.is_positive(index, "Item index")
 
         if index > self.total_items - 1:
             raise IndexError("Item index is larger than the total items - 1")
@@ -55,7 +55,7 @@ class Eta:
         if start_time is None:
             self.start_time = datetime.datetime.now()
         else:
-            Validate.type(start_time, datetime.datetime, "Start time")
+            Validate.is_type(start_time, datetime.datetime, "Start time")
 
             self.start_time = start_time
 
@@ -89,7 +89,7 @@ class Eta:
         if current_time is None:
             current_time = datetime.datetime.now()
 
-        Validate.type(current_time, datetime.datetime, "Current time")
+        Validate.is_type(current_time, datetime.datetime, "Current time")
 
         return current_time - self.start_time
 
@@ -97,7 +97,7 @@ class Eta:
         if current_time is None:
             current_time = datetime.datetime.now()
 
-        Validate.type(current_time, datetime.datetime, "Current time")
+        Validate.is_type(current_time, datetime.datetime, "Current time")
 
         time_taken = self.get_time_taken(current_time)
 
@@ -155,7 +155,7 @@ class Eta:
         return current_item_index / (self.total_items - 1)
 
     def get_percentage_string(self, current_item_index):
-        Validate.type(current_item_index, int, "Item index")
+        Validate.is_type(current_item_index, int, "Item index")
 
         percentage = self.get_percentage(current_item_index) * 100
         format_string = f"{{:.{self.percent_decimals}f}}%"
@@ -168,7 +168,7 @@ class Eta:
 
     def get_progress_string(self, current_item_index, sep=" | "):
         self._validate_index(current_item_index)
-        Validate.type(sep, str, "Seperator")
+        Validate.is_type(sep, str, "Seperator")
 
         percent_string = self.get_percentage_string(current_item_index)
 
