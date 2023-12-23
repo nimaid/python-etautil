@@ -1,6 +1,7 @@
 import datetime
 
 from .timestring import TimeString
+from .validate import Validate
 
 
 class Eta:
@@ -18,30 +19,20 @@ class Eta:
         self.set_percent_decimals(percent_decimals)
 
     @staticmethod
-    def _validate_int(int_in, property_name):
-        if not isinstance(int_in, int):
-            raise ValueError(f"{property_name} must be an int")
+    def _validate_total_items(total_items):
+        Validate.type(total_items, int, "Total items")
+
+        if total_items < 2:
+            raise ValueError("Total items must be at least 2 to compute an ETA")
 
     @staticmethod
-    def _validate_bool(bool_in, property_name):
-        if not isinstance(bool_in, int):
-            raise ValueError(f"{property_name} must be a bool")
-
-    @staticmethod
-    def _validate_string(string_in, property_name):
-        if not isinstance(string_in, str):
-            raise ValueError(f"{property_name} must be a string")
-
-    @staticmethod
-    def _validate_datetime(date_time, property_name):
-        if not isinstance(date_time, datetime.datetime):
-            raise ValueError(f"{property_name} must be a datetime object")
+    def _validate_percent_decimals(percent_decimals):
+        Validate.type(percent_decimals, int, "Percent decimals")
+        Validate.positive(percent_decimals, "Percent decimals")
 
     def _validate_index(self, index):
-        self._validate_int(index, "Item index")
-
-        if index < 0:
-            raise ValueError("Item index cannot be negative")
+        Validate.type(index, int, "Item index")
+        Validate.positive(index, "Item index")
 
         if index > self.total_items - 1:
             raise IndexError("Item index is larger than the total items - 1")
@@ -51,18 +42,6 @@ class Eta:
 
         if index < 1:
             raise ValueError("Unable to compute ETA for the first item (infinite time)")
-
-    def _validate_total_items(self, total_items):
-        self._validate_int(total_items, "Total items")
-
-        if total_items < 2:
-            raise ValueError("Total items must be at least 2 to compute an ETA")
-
-    def _validate_percent_decimals(self, percent_decimals):
-        self._validate_bool(percent_decimals, "Percent decimals")
-
-        if percent_decimals < 0:
-            raise ValueError("Percent decimals must not be negative")
 
     def set_total_items(self, total_items):
         self._validate_total_items(total_items)
@@ -76,7 +55,7 @@ class Eta:
         if start_time is None:
             self.start_time = datetime.datetime.now()
         else:
-            self._validate_datetime(start_time, "Start time")
+            Validate.type(start_time, datetime.datetime, "Start time")
 
             self.start_time = start_time
 
@@ -110,7 +89,7 @@ class Eta:
         if current_time is None:
             current_time = datetime.datetime.now()
 
-        self._validate_datetime(current_time, "Current time")
+        Validate.type(current_time, datetime.datetime, "Current time")
 
         return current_time - self.start_time
 
@@ -118,7 +97,7 @@ class Eta:
         if current_time is None:
             current_time = datetime.datetime.now()
 
-        self._validate_datetime(current_time, "Current time")
+        Validate.type(current_time, datetime.datetime, "Current time")
 
         time_taken = self.get_time_taken(current_time)
 
@@ -176,7 +155,7 @@ class Eta:
         return current_item_index / (self.total_items - 1)
 
     def get_percentage_string(self, current_item_index):
-        self._validate_int(current_item_index, "Item index")
+        Validate.type(current_item_index, int, "Item index")
 
         percentage = self.get_percentage(current_item_index) * 100
         format_string = f"{{:.{self.percent_decimals}f}}%"
@@ -189,7 +168,7 @@ class Eta:
 
     def get_progress_string(self, current_item_index, sep=" | "):
         self._validate_index(current_item_index)
-        self._validate_string(sep, "Seperator")
+        Validate.type(sep, str, "Seperator")
 
         percent_string = self.get_percentage_string(current_item_index)
 

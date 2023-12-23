@@ -1,5 +1,7 @@
 import datetime
 
+from .validate import Validate
+
 
 class TimeString:
     @staticmethod
@@ -17,11 +19,13 @@ class TimeString:
 
     class TimeDelta:
         @staticmethod
-        def short(time_in):
-            if time_in < datetime.timedelta(0):
-                time_in = datetime.timedelta(0)
+        def short(timedelta_in):
+            Validate.type(timedelta_in, datetime.timedelta, "Input time")
 
-            time_parts = TimeString.split_seconds(round(time_in.total_seconds()))
+            if timedelta_in < datetime.timedelta(0):
+                timedelta_in = datetime.timedelta(0)
+
+            time_parts = TimeString.split_seconds(round(timedelta_in.total_seconds()))
 
             time_string = f"{time_parts['s']:02}S"
             if time_parts["m"] > 0 or time_parts["h"] > 0 or time_parts["d"] > 0:
@@ -34,11 +38,13 @@ class TimeString:
             return time_string
 
         @staticmethod
-        def long(time_in):
-            if time_in < datetime.timedelta(0):
-                time_in = datetime.timedelta(0)
+        def long(timedelta_in):
+            Validate.type(timedelta_in, datetime.timedelta, "Input time")
 
-            time_parts = TimeString.split_seconds(round(time_in.total_seconds()))
+            if timedelta_in < datetime.timedelta(0):
+                timedelta_in = datetime.timedelta(0)
+
+            time_parts = TimeString.split_seconds(round(timedelta_in.total_seconds()))
 
             time_strings = []
             if time_parts["d"] > 0:
@@ -70,17 +76,21 @@ class TimeString:
 
     class DateTime:
         @staticmethod
-        def short(time_in):
+        def short(datetime_in):
+            Validate.type(datetime_in, datetime.datetime, "Input time")
+
             now = datetime.datetime.now()
-            if time_in.day != now.day or time_in.year != now.year:
-                return time_in.strftime("%Y/%m/%d @ %#I:%M:%S %p").strip()
+            if datetime_in.day != now.day or datetime_in.year != now.year:
+                return datetime_in.strftime("%Y/%m/%d @ %#I:%M:%S %p").strip()
             else:
-                return time_in.strftime("%#I:%M:%S %p").strip()
+                return datetime_in.strftime("%#I:%M:%S %p").strip()
 
         @staticmethod
-        def long(time_in):
+        def long(datetime_in):
+            Validate.type(datetime_in, datetime.datetime, "Input time")
+
             now = datetime.datetime.now()
-            if time_in.day != now.day or time_in.year != now.year:
-                return time_in.strftime("%A, %B %#d, %Y @ %#I:%M:%S %p %Z").strip()
+            if datetime_in.day != now.day or datetime_in.year != now.year:
+                return datetime_in.strftime("%A, %B %#d, %Y @ %#I:%M:%S %p %Z").strip()
             else:
-                return time_in.strftime("%#I:%M:%S %p %Z").strip()
+                return datetime_in.strftime("%#I:%M:%S %p %Z").strip()
