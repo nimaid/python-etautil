@@ -1,6 +1,7 @@
 """Provides a simple abstraction for computing and formatting time estimates."""
 import pendulum as _pendulum
 import pydantic as _pydantic
+import typing as _typing
 
 
 class Eta:
@@ -39,46 +40,34 @@ class Eta:
         self.percent_decimals = None
         self.set_percent_decimals(percent_decimals)
 
-    @staticmethod
-    def __validate_total_items(total_items):
-        Validate.is_type(total_items, int, "Total items")
-
-        if total_items < 2:
-            raise ValueError("Total items must be at least 2 to compute an ETA")
-
-    @staticmethod
-    def __validate_percent_decimals(percent_decimals):
-        Validate.is_type(percent_decimals, int, "Percent decimals")
-        Validate.is_positive(percent_decimals, "Percent decimals")
-
-    def __validate_index(self, index):
-        Validate.is_type(index, int, "Item index")
-        Validate.is_positive(index, "Item index")
-
-        if index > self.total_items - 1:
-            raise IndexError("Item index is larger than the total items - 1")
-
-    def __validate_index_eta(self, index):
-        self.__validate_index(index)
-
-        if index < 1:
-            raise ValueError("Unable to compute ETA for the first item (infinite time)")
-
     def set_total_items(self, total_items):
-        self.__validate_total_items(total_items)
+        class Params(_pydantic.BaseModel):
+            total_items: _pydantic.PositiveInt = _pydantic.Field(None, ge=2)
 
-        self.total_items = total_items
+        params = Params(
+            total_items=total_items
+        )
+
+        self.total_items = params.total_items
 
     def get_total_items(self):
         return self.total_items
 
     def set_start_time(self, start_time=None):
-        if start_time is None:
-            self.start_time = _pendulum.now()
-        else:
-            Validate.is_type(start_time, _pendulum.DateTime, "Start time")
+        now = _pendulum.now()
 
-            self.start_time = start_time
+        class Params(_pydantic.BaseModel):
+            start_time: _typing.Optional[_pendulum.DateTime] = now
+
+            class Config:
+                arbitrary_types_allowed = True
+                validate_assignment = True
+
+        params = Params(
+            start_time=start_time
+        )
+
+        self.start_time = params.start_time
 
     def get_start_time(self):
         return self.start_time
@@ -87,10 +76,14 @@ class Eta:
         return self.start_time.format(self.datetime_format)
 
     def set_verbose(self, verbose):
-        if not isinstance(verbose, bool):
-            raise ValueError("Verbose setting must be a boolean value")
+        class Params(_pydantic.BaseModel):
+            verbose: bool
 
-        self.verbose = verbose
+        params = Params(
+            verbose=verbose
+        )
+
+        self.verbose = params.verbose
 
         if self.verbose:
             self.datetime_format = "dddd, MMMM Do, YYYY @ h:mm:ss A Z"
@@ -101,99 +94,132 @@ class Eta:
         return self.verbose
 
     def set_percent_decimals(self, percent_decimals):
-        self.__validate_percent_decimals(percent_decimals)
+        class Params(_pydantic.BaseModel):
+            percent_decimals: _pydantic.PositiveInt
 
-        self.percent_decimals = percent_decimals
+        params = Params(
+            percent_decimals=percent_decimals
+        )
+
+        self.percent_decimals = params.percent_decimals
 
     def get_percent_decimals(self):
         return self.percent_decimals
 
     def get_time_taken(self, current_time=None):
-        if current_time is None:
-            current_time = _pendulum.now()
+        now = _pendulum.now()
 
-        Validate.is_type(current_time, _pendulum.DateTime, "Current time")
+        class Params(_pydantic.BaseModel):
+            current_time: _typing.Optional[_pendulum.DateTime] = now
 
-        return current_time - self.start_time
+            class Config:
+                arbitrary_types_allowed = True
+                validate_assignment = True
+
+        params = Params(
+            current_time=current_time
+        )
+
+        return params.current_time - self.start_time
 
     def get_time_taken_string(self, current_time=None):
-        if current_time is None:
-            current_time = _pendulum.now()
+        return self.get_time_taken(current_time).in_words()
 
-        Validate.is_type(current_time, _pendulum.DateTime, "Current time")
+    def get_difference(self, current_item_index, current_time=None):
+        now = _pendulum.now()
 
-        time_taken = self.get_time_taken(current_time)
+        class Params(_pydantic.BaseModel):
+            current_item_index: _pydantic.PositiveInt = _pydantic.Field(None, ge=1)
+            current_time: _typing.Optional[_pendulum.DateTime] = now
 
-        return time_taken.in_words()
+            class Config:
+                arbitrary_types_allowed = True
+                validate_assignment = True
 
-    def get_eta_difference(self, current_item_index):
-        self.__validate_index_eta(current_item_index)
+        params = Params(
+            current_item_index=current_item_index,
+            current_time=current_time
+        )
 
-        current_time = _pendulum.now()
-        time_taken = self.get_time_taken(current_time)
-        percent_done = self.get_percentage(current_item_index)
+        time_taken = self.get_time_taken(params.current_time)
+        percent_done = self.get_percentage(params.current_item_index)
 
         progress_scale = (1 - percent_done) / percent_done
-        eta_diff = time_taken * progress_scale
-        eta = current_time + eta_diff
-
-        return eta, eta_diff
-
-    def get_eta(self, current_item_index):
-        self.__validate_index_eta(current_item_index)
-
-        return self.get_eta_difference(current_item_index)[0]
-
-    def get_eta_string(self, current_item_index):
-        self.__validate_index_eta(current_item_index)
-
-        eta = self.get_eta(current_item_index)
-
-        return eta.format(self.datetime_format)
-
-    def get_difference(self, current_item_index):
-        self.__validate_index_eta(current_item_index)
-
-        return self.get_eta_difference(current_item_index)[1]
+        return time_taken * progress_scale
 
     def get_difference_string(self, current_item_index):
-        self.__validate_index_eta(current_item_index)
+        return self.get_difference(current_item_index).in_words()
 
-        difference = self.get_difference(current_item_index)
+    def get_eta(self, current_item_index, current_time=None):
+        now = _pendulum.now()
 
-        return difference.in_words()
+        class Params(_pydantic.BaseModel):
+            current_time: _typing.Optional[_pendulum.DateTime] = now
+
+            class Config:
+                arbitrary_types_allowed = True
+                validate_assignment = True
+
+        params = Params(
+            current_time=current_time
+        )
+
+        eta_diff = self.get_difference(
+            current_item_index=current_item_index,
+            current_time=params.current_time
+        )
+        eta = current_time + eta_diff
+
+        return eta
+
+    def get_eta_string(self, current_item_index):
+        return self.get_eta(current_item_index).format(self.datetime_format)
 
     def get_percentage(self, current_item_index):
-        self.__validate_index(current_item_index)
+        class Params(_pydantic.BaseModel):
+            current_item_index: _pydantic.PositiveInt = _pydantic.Field(None, ge=1)
 
-        return current_item_index / (self.total_items - 1)
+        params = Params(
+            current_item_index=current_item_index,
+        )
+
+        return params.current_item_index / (self.total_items - 1)
 
     def get_percentage_string(self, current_item_index):
-        Validate.is_type(current_item_index, int, "Item index")
+        class Params(_pydantic.BaseModel):
+            current_item_index: _pydantic.PositiveInt = _pydantic.Field(None, ge=1)
 
-        percentage = self.get_percentage(current_item_index) * 100
+        params = Params(
+            current_item_index=current_item_index,
+        )
+
+        percentage = self.get_percentage(params.current_item_index) * 100
         format_string = f"{{:.{self.percent_decimals}f}}%"
         percent_string = format_string.format(percentage)
 
         if self.verbose:
-            percent_string += f" ({current_item_index + 1}/{self.total_items})"
+            percent_string += f" ({params.current_item_index + 1}/{self.total_items})"
 
         return percent_string
 
     def get_progress_string(self, current_item_index, sep=" | "):
-        self.__validate_index(current_item_index)
-        Validate.is_type(sep, str, "Seperator")
+        class Params(_pydantic.BaseModel):
+            current_item_index: _pydantic.PositiveInt = _pydantic.Field(None, ge=1)
+            sep: str
 
-        percent_string = self.get_percentage_string(current_item_index)
+        params = Params(
+            current_item_index=current_item_index,
+            sep=sep
+        )
 
-        if current_item_index <= 0:
+        percent_string = self.get_percentage_string(params.current_item_index)
+
+        if params.current_item_index <= 0:
             return percent_string
 
-        eta, difference = self.get_eta_difference(current_item_index)
-
-        difference_string = difference.in_words()
-        eta_string = eta.format(self.datetime_format)
+        difference_string = self.get_percentage_string(params.current_item_index)
+        eta_string = self.get_eta_string(params.current_item_index)
         if self.verbose:
-            return sep.join((percent_string, f"Time remaining: {difference_string}", f"ETA: {eta_string}"))
+            return params.sep.join([percent_string, f"Time remaining: {difference_string}", f"ETA: {eta_string}"])
         else:
-            return sep.join((percent_string, difference_string, eta_string))
+            return params.sep.join([percent_string, difference_string, eta_string])
