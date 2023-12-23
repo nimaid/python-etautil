@@ -3,7 +3,6 @@
 set BUILDENVNAME=build
 
 set ORIGDIR=%CD%
-set AUTOSUMMARY=%ORIGDIR%\docs\src\_autosummary
 
 set SOURCEDIR=docs\src
 set BUILDDIR=docs\build
@@ -12,9 +11,6 @@ call conda activate %BUILDENVNAME%
 
 
 REM Command file for Sphinx documentation
-
-del /f /s /q "%AUTOSUMMARY%" 1>nul 2>&1
-rmdir /s /q "%AUTOSUMMARY%" 1>nul 2>&1
 
 
 if "%SPHINXBUILD%" == "" (
