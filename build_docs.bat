@@ -6,6 +6,7 @@ set ORIGDIR=%CD%
 
 set SOURCEDIR=docs\src
 set BUILDDIR=docs\build
+set MODULEDIR=src\etautil
 
 call conda activate %BUILDENVNAME%
 
@@ -39,5 +40,4 @@ goto end
 %SPHINXBUILD% -M help %SOURCEDIR% %BUILDDIR% %SPHINXOPTS% %O%
 
 :end
-
 call conda deactivate
