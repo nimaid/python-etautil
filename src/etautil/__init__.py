@@ -61,7 +61,6 @@ class Eta:
 
             class Config:
                 arbitrary_types_allowed = True
-                validate_assignment = True
 
         params = Params(
             start_time=start_time
@@ -114,7 +113,6 @@ class Eta:
 
             class Config:
                 arbitrary_types_allowed = True
-                validate_assignment = True
 
         params = Params(
             current_time=current_time
@@ -134,7 +132,6 @@ class Eta:
 
             class Config:
                 arbitrary_types_allowed = True
-                validate_assignment = True
 
         params = Params(
             current_item_index=current_item_index,
@@ -158,7 +155,6 @@ class Eta:
 
             class Config:
                 arbitrary_types_allowed = True
-                validate_assignment = True
 
         params = Params(
             current_time=current_time
