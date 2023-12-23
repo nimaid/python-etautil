@@ -1,6 +1,7 @@
 """Provides a simple abstraction for computing and formatting time estimates."""
 import pendulum as _pendulum
 import pydantic as _pydantic
+import pydantic_core as _pydantic_core
 import typing as _typing
 
 
@@ -65,6 +66,8 @@ class Eta:
         params = Params(
             start_time=start_time
         )
+
+        assert params.start_time is not None
 
         self.start_time = params.start_time
 
