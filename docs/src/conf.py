@@ -8,7 +8,11 @@
 
 import os
 import sys
-sys.path.insert(0, os.path.realpath("."))
+src_path = os.path.realpath(os.path.sep.join([".." for _ in range(2)] + ["src"]))
+sys.path.insert(
+    0,
+    src_path
+)
 
 project = 'etautil'
 copyright = '2023, Ella Jameson'
@@ -22,9 +26,9 @@ extensions = [
     'sphinx.ext.autosummary',
     'autoapi.extension'
 ]
-autoapi_dirs = ['.', 'etautil']
+autoapi_dirs = [src_path]
 
-autosummary_generate = True  # Turn on sphinx.ext.autosummary
+
 
 templates_path = ['_templates']
 exclude_patterns = []

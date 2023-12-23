@@ -3,7 +3,10 @@
 set BUILDENVNAME=build
 
 set ORIGDIR=%CD%
-set AUTOSUMMARY=%ORIGDIR%\src\_autosummary
+set AUTOSUMMARY=%ORIGDIR%\docs\src\_autosummary
+
+set SOURCEDIR=docs\src
+set BUILDDIR=docs\build
 
 call conda activate %BUILDENVNAME%
 
@@ -17,8 +20,6 @@ rmdir /s /q "%AUTOSUMMARY%" 1>nul 2>&1
 if "%SPHINXBUILD%" == "" (
 	set SPHINXBUILD=sphinx-build
 )
-set SOURCEDIR=src
-set BUILDDIR=docs
 
 %SPHINXBUILD% >NUL 2>NUL
 if errorlevel 9009 (

@@ -5,8 +5,8 @@
 # from the environment for the first two.
 SPHINXOPTS    ?=
 SPHINXBUILD   ?= sphinx-build
-SOURCEDIR     = src
-BUILDDIR      = docs
+SOURCEDIR     = docs/src
+BUILDDIR      = docs/build
 BUILDENVNAME  = build
 
 .ONESHELL
