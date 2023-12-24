@@ -21,4 +21,5 @@ dependencies = [
 [project.urls]
 homepage = "https://github.com/nimaid/python-etautil"
 repository = "https://github.com/nimaid/python-etautil"
+documentation = "https://python-etautil.readthedocs.io/en/latest/index.html"
 issues = "https://github.com/nimaid/python-etautil/issues"

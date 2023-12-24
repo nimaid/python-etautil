@@ -8,6 +8,8 @@ set DISTDIR=%ORIGDIR%\dist
 
 call conda activate %BUILDENVNAME%
 
+if %1 == "upload" goto UPLOAD
+
 echo Cleaning up before making release...
 del /f /s /q "%DISTDIR%" 1>nul 2>&1
 rmdir /s /q "%DISTDIR%" 1>nul 2>&1
@@ -16,7 +18,6 @@ echo Making PyPI release...
 python -m build
 if errorlevel 1 goto ERROR
 
-if "no" == "" goto UPLOAD
 goto DONE
 
 
