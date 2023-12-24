@@ -1,29 +1,6 @@
 import pendulum
-from pydantic import (
-    BaseModel,ValidationError,
-    Field, PositiveInt,
-    FieldValidationInfo, field_validator,
-    validate_call
-)
-from pydantic_core import PydanticUndefined
-import typing as typing
+from pydantic import Field, validate_call
 from typing_extensions import Annotated
-
-
-# TODO: Use @validate_call decorator instead
-# TODO: Use this with new @validate_call decorator somehow
-class NoneDefaultModel(BaseModel):
-    @field_validator("*", mode="before")
-    @classmethod
-    def use_default_value(cls, value: typing.Any, info: FieldValidationInfo) -> typing.Any:
-        if (
-                cls.model_fields[info.field_name].get_default() is not PydanticUndefined
-                and not cls.model_fields[info.field_name].is_required()
-                and value is None
-        ):
-            return cls.model_fields[info.field_name].get_default()
-        else:
-            return value
 
 
 class Eta:
@@ -37,13 +14,17 @@ class Eta:
     :return: A new Eta abstraction object.
     :rtype: Eta
     """
+
     @validate_call(config={'arbitrary_types_allowed': True})
-    def __init__(self,
-                 total_items: Annotated[int, Field(gt=2)],
-                 start_time: pendulum.DateTime = pendulum.now(),
-                 verbose: bool = False,
-                 percent_decimals: Annotated[int, Field(gt=0)] = 2
-                 ):
+    def __init__(
+            self,
+            total_items: Annotated[int, Field(gt=2)],
+            start_time: pendulum.DateTime = None,
+            verbose: bool = False,
+            percent_decimals: Annotated[int, Field(gt=0)] = 2
+    ):
+        if start_time is None:
+            start_time = pendulum.now()
 
         self.total_items = None
         self.set_total_items(total_items)
@@ -60,9 +41,10 @@ class Eta:
         self.set_percent_decimals(percent_decimals)
 
     @validate_call
-    def set_total_items(self,
-                        total_items: Annotated[int, Field(gt=2)]
-                        ) -> None:
+    def set_total_items(
+            self,
+            total_items: Annotated[int, Field(gt=2)]
+    ) -> None:
         """Set the total number of items to process.
 
         :param int total_items: The total number of items to process, used in computations.
@@ -80,9 +62,13 @@ class Eta:
         return self.total_items
 
     @validate_call(config={'arbitrary_types_allowed': True})
-    def set_start_time(self,
-                       start_time: pendulum.DateTime = pendulum.now()
-                       ) -> None:
+    def set_start_time(
+            self,
+            start_time: pendulum.DateTime = None
+    ) -> None:
+        if start_time is None:
+            start_time = pendulum.now()
+
         self.start_time = start_time
 
     def get_start_time(self) -> pendulum.DateTime:
@@ -91,15 +77,12 @@ class Eta:
     def get_start_time_string(self) -> str:
         return self.start_time.format(self.datetime_format)
 
-    def set_verbose(self, verbose: bool) -> None:
-        class Params(BaseModel):
+    @validate_call
+    def set_verbose(
+            self,
             verbose: bool
-
-        params = Params(
-            verbose=verbose
-        )
-
-        self.verbose = params.verbose
+    ) -> None:
+        self.verbose = verbose
 
         if self.verbose:
             self.datetime_format = "dddd, MMMM Do, YYYY @ h:mm:ss A Z"
@@ -109,58 +92,47 @@ class Eta:
     def get_verbose(self) -> bool:
         return self.verbose
 
-    def set_percent_decimals(self, percent_decimals: int) -> None:
-        class Params(BaseModel):
-            percent_decimals: PositiveInt
-
-        params = Params(
-            percent_decimals=percent_decimals
-        )
-
-        self.percent_decimals = params.percent_decimals
+    @validate_call
+    def set_percent_decimals(
+            self,
+            percent_decimals: int
+    ) -> None:
+        self.percent_decimals = percent_decimals
 
     def get_percent_decimals(self) -> int:
         return self.percent_decimals
 
-    def get_time_taken(self, current_time: pendulum.DateTime = None) -> pendulum.Duration:
-        now = pendulum.now()
+    @validate_call
+    def get_time_taken(
+            self,
+            current_time: pendulum.DateTime = None
+    ) -> pendulum.Duration:
+        if current_time is None:
+            current_time = pendulum.now()
 
-        class Params(NoneDefaultModel):
-            current_time: typing.Optional[pendulum.DateTime] = now
+        return current_time - self.start_time
 
-            class Config:
-                arbitrary_types_allowed = True
+    @validate_call
+    def get_time_taken_string(
+            self,
+            current_time: pendulum.DateTime = None
+    ) -> str:
+        if current_time is None:
+            current_time = pendulum.now()
 
-        params = Params(
-            current_time=current_time
-        )
-
-        assert params.current_time is not None
-
-        return params.current_time - self.start_time
-
-    def get_time_taken_string(self, current_time: pendulum.DateTime = None) -> str:
         return self.get_time_taken(current_time).in_words()
 
-    def get_difference(self, current_item_index, current_time=None):
-        now = pendulum.now()
+    @validate_call
+    def get_difference(
+            self,
+            current_item_index,
+            current_time=None
+    ):
+        if current_time is None:
+            current_time = pendulum.now()
 
-        class Params(NoneDefaultModel):
-            current_item_index: PositiveInt = Field(None, ge=1, le=(self.total_items - 1))
-            current_time: typing.Optional[pendulum.DateTime] = now
-
-            class Config:
-                arbitrary_types_allowed = True
-
-        params = Params(
-            current_item_index=current_item_index,
-            current_time=current_time
-        )
-
-        assert params.current_time is not None
-
-        time_taken = self.get_time_taken(params.current_time)
-        percent_done = self.get_percentage(params.current_item_index)
+        time_taken = self.get_time_taken(current_time)
+        percent_done = self.get_percentage(current_item_index)
 
         progress_scale = (1 - percent_done) / percent_done
         return time_taken * progress_scale
