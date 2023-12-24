@@ -5,13 +5,15 @@ on:
     branches:
       - dev
 jobs:
-  Explore-GitHub-Actions:
+  Build-PyPI:
     runs-on: ubuntu-latest
     steps:
       - run: echo "This job was automatically triggered by a ${{ github.event_name }} event."
       - run: echo "Running on a ${{ runner.os }} server."
       - name: Checkout ${{ github.repository }}
         uses: actions/checkout@v4
+      - name: Install Python Tools
+        run: python3 -m pip install build twine
       - name: Build with Python
         run: python3 -m build
       - name: Listing directory dist/
