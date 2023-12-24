@@ -48,7 +48,7 @@ autoapi_options = [
     #'private-members'
     'show-inheritance',
     'show-module-summary',
-    'special-members',
+    #'special-members',
     'imported-members'
 ]
 autoapi_add_toctree_entry = True

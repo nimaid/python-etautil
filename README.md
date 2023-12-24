@@ -23,7 +23,7 @@ for item, eta in etautil.eta(range(10)):
     print(eta)  # Print the current progress stats
     process_item(item)
 
-print(f"Done processing {eta.total_items} items in {eta.time_taken_string()}!\n")
+print(f"Done processing {eta.total_items} items in {eta.time_taken_string}!\n")
 ```
 
 Here is an example of the sort of output this produces:
@@ -61,20 +61,21 @@ Done processing 10 items in 1 minute and 29 seconds!
 ```
 
 You can also build a custom message piece-by-piece, like so:
+
 ```python
 print(f"Processing item: '{item}'")
-print(f"  Completed: {eta.percentage_string()}")
-print(f"  Time taken: {eta.time_taken_string()}")
-print(f"  Time remaining: {eta.time_remaining_string()}")
-print(f"  ETA: {eta.eta_string()}")
+print(f"  Completed: {eta.percentage_string}")
+print(f"  Time taken: {eta.time_taken_string}")
+print(f"  Time remaining: {eta.time_remaining_string}")
+print(f"  ETA: {eta.eta_string}")
 ```
 This produces the following output:
 ```
 Processing item: '0'
   Completed: 0.00% (0/10)
   Time taken: 0 seconds
-  Time remaining: Not enough data.
-  ETA: Not enough data.
+  Time remaining: not enough data
+  ETA: not enough data
 Processing item: '1'
   Completed: 10.00% (1/10)
   Time taken: 18 seconds
