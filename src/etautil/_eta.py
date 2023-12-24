@@ -1,10 +1,8 @@
 import datetime
 from pydantic import NonNegativeInt, Field, validate_call
-from typing_extensions import Annotated
+from typing import Any, Annotated
 
 from .timeformat import TimeString
-
-# TODO: Add iterable option, so like `for i, eta in etautil.eta(range(100):`
 
 
 class Eta:
@@ -215,7 +213,7 @@ class EtaCalculator:
             self,
             current_item_index: NonNegativeInt,
             current_time: datetime.datetime = None
-    ):
+    ) -> Eta:
         if current_time is None:
             current_time = datetime.datetime.now()
 
@@ -264,3 +262,24 @@ class EtaCalculator:
             percent_decimals: NonNegativeInt
     ) -> None:
         self.percent_decimals = percent_decimals
+
+
+@validate_call
+def eta(
+        items: Any,
+        start_time: datetime.datetime = None,
+        verbose: bool = False,
+        percent_decimals: NonNegativeInt = 2
+) -> tuple[Any, Eta]:
+    if start_time is None:
+        start_time = datetime.datetime.now()
+
+    eta_calculator = EtaCalculator(
+        total_items=len(items),
+        start_time=start_time,
+        verbose=verbose,
+        percent_decimals=percent_decimals
+    )
+
+    for i, item in enumerate(items):
+        yield item, eta_calculator.get_eta(i)

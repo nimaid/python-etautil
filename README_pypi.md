@@ -5,24 +5,19 @@
 
 ```python
 import time, random
-from etautil import EtaCalculator
+import etautil
 
 
 # Just a placeholder function that takes a random amount of time
 def process_item(item):
     time.sleep(random.random() * 5)
 
-
-item_count = 10000
-print(f"Processing {item_count} items...")
-
-eta = EtaCalculator(item_count)  # Starts keeping time now
-for item in range(item_count):
-    print(eta.get_eta())  # Print the current progress stats
-
+eta = None  # Initialize here so we can use it later
+for item, eta in etautil.eta(range(100)):
+    print(eta)  # Print the current progress stats
     process_item(item)
 
-print(f"Done processing {item_count} items in {eta.time_taken_string()}!\n")
+print(f"Done processing {eta.total_items} items in {eta.time_taken_string()}!\n")
 ```
 
 Here is an example of the sort of output this produces:

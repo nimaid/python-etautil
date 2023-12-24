@@ -1,11 +1,10 @@
 """Provides tools to format various datetime objects into human-readable strings."""
 import datetime
 from pydantic import NonNegativeInt, NonNegativeFloat, validate_call
-from typing import Union
 
 
 @validate_call
-def split_seconds(seconds_in: Union[NonNegativeInt, NonNegativeFloat]) -> dict[str, Union[int, float]]:
+def split_seconds(seconds_in: NonNegativeInt | NonNegativeFloat) -> dict[str, int | float]:
     """Split seconds into days, hours, minutes, and seconds, and return a dictionary with those values.
 
     :param int seconds_in: The total number of seconds to split up.

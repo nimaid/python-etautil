@@ -1,5 +1,5 @@
 """A library of tools for tracking, computing, and formatting time estimates."""
 
-__version__ = "2.3.1"
+__version__ = "2.4.0"
 
-from ._eta import Eta, EtaCalculator
+from ._eta import Eta, EtaCalculator, eta
