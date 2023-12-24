@@ -1,6 +1,6 @@
 """Provides tools to format various datetime objects into human-readable strings."""
 import datetime
-from pydantic import NonNegativeInt, NonNegativeFloat, validate_call
+from pydantic import NonNegativeInt, NonNegativeFloat, PositiveInt, validate_call
 
 
 @validate_call
@@ -23,6 +23,26 @@ def split_seconds(seconds_in: NonNegativeInt | NonNegativeFloat) -> dict[str, in
         "m": round(minutes),
         "s": seconds
     }
+
+
+@validate_call
+def day_of_month_suffix(day: PositiveInt) -> str:
+    match day % 10:
+        case 1:
+            return"st"
+        case 2:
+            return "nd"
+        case 3:
+            return "rd"
+        case _:
+            return "th"
+
+
+@validate_call
+def timezone_name(datetime_in: datetime.datetime) -> str:
+    timezone = datetime_in.astimezone()
+
+    return timezone.tzinfo.tzname(timezone)
 
 
 class TimeString:
@@ -108,19 +128,9 @@ class TimeString:
             format_string = "%#I:%M:%S %p"
 
             if datetime_in.day != now.day or datetime_in.year != now.year:
-                match datetime_in.day % 10:
-                    case 1:
-                        day_suffix = "st"
-                    case 2:
-                        day_suffix = "nd"
-                    case 3:
-                        day_suffix = "rd"
-                    case _:
-                        day_suffix = "th"
-                format_string = f"%A, %B %#d{day_suffix}, %Y @ {format_string}"
+                format_string = f"%A, %B %#d{day_of_month_suffix(datetime_in.day)}, %Y @ {format_string}"
 
             time_string = datetime_in.strftime(format_string).strip()
-            timezone = datetime_in.astimezone()
-            time_string += f" {timezone.tzinfo.tzname(timezone)}"
+            time_string += f" {timezone_name(datetime_in)}"
 
             return time_string
