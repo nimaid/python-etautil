@@ -16,12 +16,15 @@ echo Making PyPI release...
 python -m build
 if errorlevel 1 goto ERROR
 
+if "no" == "" goto UPLOAD
+goto DONE
+
+
+:UPLOAD
 echo Uploading to PyPI
 twine upload "%DISTDIR%"\*
 if errorlevel 1 goto ERROR
-
 goto DONE
-
 
 :ERROR
 cd %ORIGDIR%

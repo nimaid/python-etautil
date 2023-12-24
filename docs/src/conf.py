@@ -40,6 +40,7 @@ extensions = [
     'autoapi.extension',
     'sphinx_rtd_theme'
 ]
+
 autoapi_dirs = [src_path]
 autoapi_options = [
     'members',
@@ -50,6 +51,18 @@ autoapi_options = [
     'special-members',
     'imported-members'
 ]
+autoapi_add_toctree_entry = True
+
+
+def skip_version(app, what, name, obj, skip, options):
+    if ".__version__" in name:
+        skip = True
+    return skip
+
+
+def setup(sphinx):
+    sphinx.connect("autoapi-skip-member", skip_version)
+
 
 templates_path = ['_templates']
 exclude_patterns = []

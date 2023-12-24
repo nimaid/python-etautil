@@ -17,7 +17,7 @@ class Eta:
     @validate_call(config={'arbitrary_types_allowed': True})
     def __init__(
             self,
-            total_items: Annotated[int, Field(gt=1)],
+            total_items: Annotated[NonNegativeInt, Field(gt=1)],
             start_time: pendulum.DateTime = None,
             verbose: bool = False,
             percent_decimals: NonNegativeInt = 2
@@ -41,7 +41,7 @@ class Eta:
 
     def _validate_item_index(
             self,
-            item_index: int
+            item_index: NonNegativeInt
     ) -> None:
         if item_index > self.total_items - 1:
             raise IndexError(f"Item index should be less than {self.total_items - 1} (the total items - 1)")
@@ -49,7 +49,7 @@ class Eta:
     @validate_call
     def set_total_items(
             self,
-            total_items: Annotated[int, Field(gt=1)]
+            total_items: Annotated[NonNegativeInt, Field(gt=1)]
     ) -> None:
         """Set the total number of items to process.
 
