@@ -17,13 +17,21 @@ sys.path.insert(
     src_path
 )
 
-project = 'etautil'
+project = 'ETA Utility (etautil)'
 copyright = '2023, Ella Jameson'
 author = 'Ella Jameson'
 
-with open(os.path.join(base_path, "pyproject.toml"), "rb") as f:
-    pyproject_toml = tomllib.load(f)
-version = pyproject_toml["project"]["version"]
+version = None
+version_prefix = "__version__ = "
+with open(os.path.join(src_path, "etautil", "__init__.py")) as f:
+    for line in f.readlines():
+        line = line.strip("\n").strip("\r").strip()
+
+        if line[:len(version_prefix)] == version_prefix:
+            version = line.split("=")[1].split("#")[0].strip().replace("\"", "")
+            break
+assert version is not None
+version = f"v{version}"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

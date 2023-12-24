@@ -1,5 +1,5 @@
 import pendulum
-from pydantic import ValidationError, NonNegativeInt, Field, validate_call
+from pydantic import NonNegativeInt, Field, validate_call
 from typing_extensions import Annotated
 
 
