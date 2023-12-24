@@ -3,7 +3,7 @@ run-name:  Build and Upload to PyPI (${{ github.actor }})
 on:
   push:
     branches:
-      - master
+      - dev
 jobs:
   Explore-GitHub-Actions:
     runs-on: ubuntu-latest
