@@ -22,8 +22,5 @@ jobs:
         run: python3 -m pip install build twine
       - name: Build with Python
         run: python3 -m build
-      - name: Upload to PyPI
-        run:
-      - run: echo "Job status is ${{ job.status }}."
       - name: Publish package distributions to PyPI
         uses: pypa/gh-action-pypi-publish@v1.8.11
