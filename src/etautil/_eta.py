@@ -2,17 +2,17 @@ import datetime
 from pydantic import NonNegativeInt, Field, validate_call
 from typing_extensions import Annotated
 
-from ._timestring import TimeString
+from .timeformat import TimeString
 
-# TODO: Consider moving back to standard datetime and my own private methods.
 # TODO: Add iterable option, so like `for i, eta in etautil.eta(range(100):`
+
 
 class Eta:
     """Holds ETA state information and provides methods to compute and format time estimate info.
 
     :param int total_items: The total number of items to process, used in computations.
     :param int current_item_index: The index of the item about to be processed (0-indexed).
-    :param pendulum.DateTime start_time: The starting time to use for the computation.
+    :param datetime.datetime start_time: The starting time to use for the computation.
     :param current_time: The time to use for the computation, defaults to the current time.
     :param bool verbose: If we should make strings verbosely or not.
     :param int percent_decimals: The number of decimal places to use in the percentage string.
@@ -20,18 +20,18 @@ class Eta:
     :raises IndexError: Raised when the index is too large.
     :rtype: Eta
     """
-    @validate_call(config={'arbitrary_types_allowed': True})
+    @validate_call
     def __init__(
             self,
             total_items: Annotated[NonNegativeInt, Field(gt=1)],
             current_item_index: NonNegativeInt,
-            start_time: pendulum.DateTime,
-            current_time: pendulum.DateTime = None,
+            start_time: datetime.datetime,
+            current_time: datetime.datetime = None,
             verbose: bool = False,
             percent_decimals: NonNegativeInt = 2
     ):
         if current_time is None:
-            current_time = pendulum.now()
+            current_time = datetime.datetime.now()
 
         self.total_items = total_items
         self.current_item_index = current_item_index
@@ -41,11 +41,6 @@ class Eta:
         self.percent_decimals = percent_decimals
 
         self._validate_item_index(self.current_item_index)
-
-        if self.verbose:
-            self.datetime_format = "dddd, MMMM Do, YYYY @ h:mm:ss A Z"
-        else:
-            self.datetime_format = "YYYY/MM/DD @ h:mm:ss A"
 
         self.percent_format = f"{{:.{self.percent_decimals}f}}%"
 
@@ -72,11 +67,11 @@ class Eta:
         if item_index > self.total_items - 1:
             raise IndexError(f"Item index should be less than {self.total_items - 1} (the total items - 1)")
 
-    def eta(self) -> pendulum.DateTime:
-        """Compute the ETA and return it as a pendulum.DateTime object.
+    def eta(self) -> datetime.datetime:
+        """Compute the ETA and return it as a datetime.datetime object.
 
-        :return: The ETA as a pendulum.DateTime object.
-        :rtype: pendulum.DateTime
+        :return: The ETA as a datetime.datetime object.
+        :rtype: datetime.datetime
         """
         return self.current_time + self.time_remaining()
 
@@ -86,13 +81,16 @@ class Eta:
         :return: The ETA as a human-readable string.
         :rtype: str
         """
-        return self.eta().format(self.datetime_format)
+        if self.verbose:
+            return TimeString.DateTime.long(self.eta())
+        else:
+            return TimeString.DateTime.short(self.eta())
 
-    def time_remaining(self) -> pendulum.Duration:
-        """Compute the time remaining and return it as a pendulum.Duration object.
+    def time_remaining(self) -> datetime.timedelta:
+        """Compute the time remaining and return it as a datetime.timedelta object.
 
-        :return: The time remaining as a pendulum.Duration object.
-        :rtype: pendulum.Duration
+        :return: The time remaining as a datetime.timedelta object.
+        :rtype: datetime.timedelta
         """
         percent_done = self.percentage()
         progress_scale = (1 - percent_done) / percent_done
@@ -105,7 +103,10 @@ class Eta:
         :return: The time remaining as a human-readable string.
         :rtype: str
         """
-        return self.time_remaining().in_words()
+        if self.verbose:
+            return TimeString.TimeDelta.long(self.time_remaining())
+        else:
+            return TimeString.TimeDelta.short(self.time_remaining())
 
     def percentage(self) -> float:
         """Compute the completion percentage and return it as a float.
@@ -127,21 +128,24 @@ class Eta:
 
         return percent_string
 
-    def time_taken(self) -> pendulum.Duration:
-        """Compute the time taken and return it as a pendulum.Duration object.
+    def time_taken(self) -> datetime.timedelta:
+        """Compute the time taken and return it as a datetime.timedelta object.
 
-        :return: The time taken as a pendulum.Duration object.
-        :rtype: pendulum.Duration
+        :return: The time taken as a datetime.timedelta object.
+        :rtype: datetime.timedelta
         """
         return self.current_time - self.start_time
 
     def time_taken_string(self) -> str:
-        """Compute the time taken and return it as a pendulum.Duration object.
+        """Compute the time taken and return it as a datetime.timedelta object.
 
-        :return: The time taken as a pendulum.Duration object.
-        :rtype: pendulum.Duration
+        :return: The time taken as a datetime.timedelta object.
+        :rtype: datetime.timedelta
         """
-        return self.time_taken().in_words()
+        if self.verbose:
+            return TimeString.TimeDelta.long(self.time_taken())
+        else:
+            return TimeString.TimeDelta.short(self.time_taken())
 
     @validate_call
     def progress_string(
@@ -166,22 +170,22 @@ class EtaCalculator:
     """Tracks, computes, and formats time estimates.
 
     :param int total_items: The total number of items to process, used in computations.
-    :param pendulum.DateTime start_time: The starting time used in all calculations, defaults to the current time.
+    :param datetime.datetime start_time: The starting time used in all calculations, defaults to the current time.
     :param bool verbose: If we should make strings verbosely or not.
     :param int percent_decimals: The number of decimal places to use in the percentage string.
     :raises pydantic.ValidationError: Raised when a parameter is invalid.
     :rtype: EtaCalculator
     """
-    @validate_call(config={'arbitrary_types_allowed': True})
+    @validate_call
     def __init__(
             self,
             total_items: Annotated[NonNegativeInt, Field(gt=1)],
-            start_time: pendulum.DateTime = None,
+            start_time: datetime.datetime = None,
             verbose: bool = False,
             percent_decimals: NonNegativeInt = 2
     ):
         if start_time is None:
-            start_time = pendulum.now()
+            start_time = datetime.datetime.now()
 
         self.total_items = None
         self.set_total_items(total_items)
@@ -206,14 +210,14 @@ class EtaCalculator:
                 f"verbose = {self.verbose}, "
                 f"percentage decimal places = {self.percent_decimals}")
 
-    @validate_call(config={'arbitrary_types_allowed': True})
+    @validate_call
     def get_eta(
             self,
             current_item_index: NonNegativeInt,
-            current_time: pendulum.DateTime = None
+            current_time: datetime.datetime = None
     ):
         if current_time is None:
-            current_time = pendulum.now()
+            current_time = datetime.datetime.now()
 
         return Eta(
             total_items=self.total_items,
@@ -237,13 +241,13 @@ class EtaCalculator:
         """
         self.total_items = total_items
 
-    @validate_call(config={'arbitrary_types_allowed': True})
+    @validate_call
     def set_start_time(
             self,
-            start_time: pendulum.DateTime = None
+            start_time: datetime.datetime = None
     ) -> None:
         if start_time is None:
-            start_time = pendulum.now()
+            start_time = datetime.datetime.now()
 
         self.start_time = start_time
 

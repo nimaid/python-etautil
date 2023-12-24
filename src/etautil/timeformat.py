@@ -1,4 +1,4 @@
-"""Provides tools to format time-based objects into strings."""
+"""Provides tools to format various datetime objects into human-readable strings."""
 import datetime
 from pydantic import NonNegativeInt, NonNegativeFloat, validate_call
 from typing import Union
@@ -106,7 +106,7 @@ class TimeString:
         def long(datetime_in: datetime.datetime) -> str:
             now = datetime.datetime.now()
 
-            format_string = "%#I:%M:%S %p %Z"
+            format_string = "%#I:%M:%S %p"
 
             if datetime_in.day != now.day or datetime_in.year != now.year:
                 match datetime_in.day % 10:
@@ -120,4 +120,8 @@ class TimeString:
                         day_suffix = "th"
                 format_string = f"%A, %B %#d{day_suffix}, %Y @ {format_string}"
 
-            return datetime_in.strftime(format_string).strip()
+            time_string = datetime_in.strftime(format_string).strip()
+            timezone = datetime_in.astimezone()
+            time_string += f" {timezone.tzinfo.tzname(timezone)}"
+
+            return time_string
