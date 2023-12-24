@@ -18,7 +18,7 @@ print(f"Processing {item_count} items...")
 
 eta = EtaCalculator(item_count)  # Starts keeping time now
 for item in range(item_count):
-    print(eta.progress_string(item))  # Print the current progress stats
+    print(eta.get_eta())  # Print the current progress stats
 
     process_item(item)
 
