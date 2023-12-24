@@ -14,8 +14,7 @@ authors = [
 
 classifiers = []
 dependencies = [
-    "pydantic",
-    "pendulum"
+    "pydantic"
 ]
 
 [project.urls]

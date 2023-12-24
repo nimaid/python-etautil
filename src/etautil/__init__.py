@@ -1,4 +1,4 @@
-"""A simple abstraction for computing and formatting time estimates."""
+"""A library of tools for tracking, computing, and formatting time estimates."""
 
 __version__ = "2.3.0"
 

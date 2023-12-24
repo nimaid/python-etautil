@@ -1,11 +1,11 @@
-import pendulum
+import datetime
 from pydantic import NonNegativeInt, Field, validate_call
 from typing_extensions import Annotated
 
-# TODO: Refactor into an Eta class that holds eta state info and provides print methods.
+from ._timestring import TimeString
+
 # TODO: Consider moving back to standard datetime and my own private methods.
 # TODO: Add iterable option, so like `for i, eta in etautil.eta(range(100):`
-
 
 class Eta:
     """Holds ETA state information and provides methods to compute and format time estimate info.

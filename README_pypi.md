@@ -1,5 +1,5 @@
 # ETA Utility
-### A simple abstraction for computing and formatting time estimates.
+### A library of tools for tracking, computing, and formatting time estimates.
 
 ## Basic Usage
 
