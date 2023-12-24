@@ -112,7 +112,7 @@ class Eta:
         :return: The completion percentage as a float in range on 0.0 - 1.0.
         :rtype: float
         """
-        return self.current_item_index / (self.total_items - 1)
+        return self.current_item_index / self.total_items
 
     def percentage_string(self) -> str:
         """Compute the completion percentage and return it as a string.
