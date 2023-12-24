@@ -4,6 +4,139 @@ from typing import Any, Annotated
 
 from .timeformat import TimeString
 
+@validate_call
+def eta(
+        items: Any,
+        start_time: datetime.datetime = None,
+        verbose: bool = False,
+        percent_decimals: NonNegativeInt = 2,
+        not_enough_data_string: str = "Not enough data."
+) -> tuple[Any, Eta]:
+    if start_time is None:
+        start_time = datetime.datetime.now()
+
+    eta_calculator = EtaCalculator(
+        total_items=len(items),
+        start_time=start_time,
+        verbose=verbose,
+        percent_decimals=percent_decimals,
+        not_enough_data_string=not_enough_data_string
+    )
+
+    for i, item in enumerate(items):
+        yield item, eta_calculator.get_eta(i)
+
+
+class EtaCalculator:
+    """Tracks, computes, and formats time estimates.
+
+    :param int total_items: The total number of items to process, used in computations.
+    :param datetime.datetime start_time: The starting time used in all calculations, defaults to the current time.
+    :param bool verbose: If we should make strings verbosely or not.
+    :param int percent_decimals: The number of decimal places to use in the percentage string.
+    :raises pydantic.ValidationError: Raised when a parameter is invalid.
+    :rtype: EtaCalculator
+    """
+    @validate_call
+    def __init__(
+            self,
+            total_items: Annotated[NonNegativeInt, Field(gt=1)],
+            start_time: datetime.datetime = None,
+            verbose: bool = False,
+            percent_decimals: NonNegativeInt = 2,
+            not_enough_data_string: str = "Not enough data."
+    ):
+        if start_time is None:
+            start_time = datetime.datetime.now()
+
+        self.total_items = None
+        self.set_total_items(total_items)
+
+        self.start_time = None
+        self.set_start_time(start_time)
+
+        self.verbose = None
+        self.set_verbose(verbose)
+
+        self.percent_decimals = None
+        self.set_percent_decimals(percent_decimals)
+
+        self.not_enough_data_string = None
+        self.set_not_enough_data_string(not_enough_data_string)
+
+    def __str__(self) -> str:
+        """Returns the string format of this ETA object.
+
+        :return: The user-friendly string representing the calculator object.
+        :rtype: str
+        """
+        return (f"ETA calculator for {self.total_items} items, "
+                f"start time = {self.start_time}, "
+                f"verbose = {self.verbose}, "
+                f"percentage decimal places = {self.percent_decimals}")
+
+    @validate_call
+    def get_eta(
+            self,
+            current_item_index: NonNegativeInt,
+            current_time: datetime.datetime = None
+    ) -> Eta:
+        if current_time is None:
+            current_time = datetime.datetime.now()
+
+        return Eta(
+            total_items=self.total_items,
+            current_item_index=current_item_index,
+            start_time=self.start_time,
+            current_time=current_time,
+            verbose=self.verbose,
+            percent_decimals=self.percent_decimals
+        )
+
+    @validate_call
+    def set_total_items(
+            self,
+            total_items: Annotated[NonNegativeInt, Field(gt=1)]
+    ) -> None:
+        """Set the total number of items to process.
+
+        :param int total_items: The total number of items to process, used in computations.
+        :raises pydantic.ValidationError: Raised when a parameter is invalid.
+        :rtype: None
+        """
+        self.total_items = total_items
+
+    @validate_call
+    def set_start_time(
+            self,
+            start_time: datetime.datetime = None
+    ) -> None:
+        if start_time is None:
+            start_time = datetime.datetime.now()
+
+        self.start_time = start_time
+
+    @validate_call
+    def set_verbose(
+            self,
+            verbose: bool
+    ) -> None:
+        self.verbose = verbose
+
+    @validate_call
+    def set_percent_decimals(
+            self,
+            percent_decimals: NonNegativeInt
+    ) -> None:
+        self.percent_decimals = percent_decimals
+
+    @validate_call
+    def set_not_enough_data_string(
+            self,
+            not_enough_data_string: str
+    ) -> None:
+        self.not_enough_data_string = not_enough_data_string
+
 
 class Eta:
     """Holds ETA state information and provides methods to compute and format time estimate info.
@@ -180,137 +313,3 @@ class Eta:
             eta_string = f"ETA: {eta_string}"
 
         return sep.join([percent_string, difference_string, eta_string])
-
-
-class EtaCalculator:
-    """Tracks, computes, and formats time estimates.
-
-    :param int total_items: The total number of items to process, used in computations.
-    :param datetime.datetime start_time: The starting time used in all calculations, defaults to the current time.
-    :param bool verbose: If we should make strings verbosely or not.
-    :param int percent_decimals: The number of decimal places to use in the percentage string.
-    :raises pydantic.ValidationError: Raised when a parameter is invalid.
-    :rtype: EtaCalculator
-    """
-    @validate_call
-    def __init__(
-            self,
-            total_items: Annotated[NonNegativeInt, Field(gt=1)],
-            start_time: datetime.datetime = None,
-            verbose: bool = False,
-            percent_decimals: NonNegativeInt = 2,
-            not_enough_data_string: str = "Not enough data."
-    ):
-        if start_time is None:
-            start_time = datetime.datetime.now()
-
-        self.total_items = None
-        self.set_total_items(total_items)
-
-        self.start_time = None
-        self.set_start_time(start_time)
-
-        self.verbose = None
-        self.set_verbose(verbose)
-
-        self.percent_decimals = None
-        self.set_percent_decimals(percent_decimals)
-
-        self.not_enough_data_string = None
-        self.set_not_enough_data_string(not_enough_data_string)
-
-    def __str__(self) -> str:
-        """Returns the string format of this ETA object.
-
-        :return: The user-friendly string representing the calculator object.
-        :rtype: str
-        """
-        return (f"ETA calculator for {self.total_items} items, "
-                f"start time = {self.start_time}, "
-                f"verbose = {self.verbose}, "
-                f"percentage decimal places = {self.percent_decimals}")
-
-    @validate_call
-    def get_eta(
-            self,
-            current_item_index: NonNegativeInt,
-            current_time: datetime.datetime = None
-    ) -> Eta:
-        if current_time is None:
-            current_time = datetime.datetime.now()
-
-        return Eta(
-            total_items=self.total_items,
-            current_item_index=current_item_index,
-            start_time=self.start_time,
-            current_time=current_time,
-            verbose=self.verbose,
-            percent_decimals=self.percent_decimals
-        )
-
-    @validate_call
-    def set_total_items(
-            self,
-            total_items: Annotated[NonNegativeInt, Field(gt=1)]
-    ) -> None:
-        """Set the total number of items to process.
-
-        :param int total_items: The total number of items to process, used in computations.
-        :raises pydantic.ValidationError: Raised when a parameter is invalid.
-        :rtype: None
-        """
-        self.total_items = total_items
-
-    @validate_call
-    def set_start_time(
-            self,
-            start_time: datetime.datetime = None
-    ) -> None:
-        if start_time is None:
-            start_time = datetime.datetime.now()
-
-        self.start_time = start_time
-
-    @validate_call
-    def set_verbose(
-            self,
-            verbose: bool
-    ) -> None:
-        self.verbose = verbose
-
-    @validate_call
-    def set_percent_decimals(
-            self,
-            percent_decimals: NonNegativeInt
-    ) -> None:
-        self.percent_decimals = percent_decimals
-
-    @validate_call
-    def set_not_enough_data_string(
-            self,
-            not_enough_data_string: str
-    ) -> None:
-        self.not_enough_data_string = not_enough_data_string
-
-
-@validate_call
-def eta(
-        items: Any,
-        start_time: datetime.datetime = None,
-        verbose: bool = False,
-        percent_decimals: NonNegativeInt = 2,
-        not_enough_data_string: str = "Not enough data."
-) -> tuple[Any, Eta]:
-    if start_time is None:
-        start_time = datetime.datetime.now()
-
-    eta_calculator = EtaCalculator(
-        total_items=len(items),
-        start_time=start_time,
-        verbose=verbose,
-        percent_decimals=percent_decimals,
-        not_enough_data_string=not_enough_data_string
-    )
-
-    for i, item in enumerate(items):
-        yield item, eta_calculator.get_eta(i)
