@@ -14,6 +14,7 @@ class Eta:
     :param current_time: The time to use for the computation, defaults to the current time.
     :param bool verbose: If we should make strings verbosely or not.
     :param int percent_decimals: The number of decimal places to use in the percentage string.
+    :param str not_enough_data_string: The string to return when not enough data has been gathered.
     :raises pydantic.ValidationError: Raised when a parameter is invalid.
     :raises IndexError: Raised when the index is too large.
     :rtype: Eta
@@ -26,7 +27,8 @@ class Eta:
             start_time: datetime.datetime,
             current_time: datetime.datetime = None,
             verbose: bool = False,
-            percent_decimals: NonNegativeInt = 2
+            percent_decimals: NonNegativeInt = 2,
+            not_enough_data_string: str = "Not enough data."
     ):
         if current_time is None:
             current_time = datetime.datetime.now()
@@ -37,6 +39,7 @@ class Eta:
         self.current_time = current_time
         self.verbose = verbose
         self.percent_decimals = percent_decimals
+        self.not_enough_data_string = not_enough_data_string
 
         self._validate_item_index(self.current_item_index)
 
@@ -65,13 +68,17 @@ class Eta:
         if item_index > self.total_items - 1:
             raise IndexError(f"Item index should be less than {self.total_items - 1} (the total items - 1)")
 
-    def eta(self) -> datetime.datetime:
+    def eta(self) -> datetime.datetime | None:
         """Compute the ETA and return it as a datetime.datetime object.
 
         :return: The ETA as a datetime.datetime object.
         :rtype: datetime.datetime
         """
-        return self.current_time + self.time_remaining()
+        time_remaining = self.time_remaining()
+        if time_remaining is None:
+            return None
+
+        return self.current_time + time_remaining
 
     def eta_string(self) -> str:
         """Compute the ETA and return it as a string.
@@ -79,18 +86,25 @@ class Eta:
         :return: The ETA as a human-readable string.
         :rtype: str
         """
-        if self.verbose:
-            return TimeString.DateTime.long(self.eta())
-        else:
-            return TimeString.DateTime.short(self.eta())
+        estimate = self.eta()
+        if estimate is None:
+            return self.not_enough_data_string
 
-    def time_remaining(self) -> datetime.timedelta:
+        if self.verbose:
+            return TimeString.DateTime.long(estimate)
+        else:
+            return TimeString.DateTime.short(estimate)
+
+    def time_remaining(self) -> datetime.timedelta | None:
         """Compute the time remaining and return it as a datetime.timedelta object.
 
-        :return: The time remaining as a datetime.timedelta object.
-        :rtype: datetime.timedelta
+        :return: The time remaining as a datetime.timedelta object, None if the index is 0.
+        :rtype: datetime.timedelta | None
         """
         percent_done = self.percentage()
+        if percent_done <= 0:
+            return None
+
         progress_scale = (1 - percent_done) / percent_done
 
         return self.time_taken() * progress_scale
@@ -101,10 +115,14 @@ class Eta:
         :return: The time remaining as a human-readable string.
         :rtype: str
         """
+        time_remaining = self.time_remaining()
+        if time_remaining is None:
+            return self.not_enough_data_string
+
         if self.verbose:
-            return TimeString.TimeDelta.long(self.time_remaining())
+            return TimeString.TimeDelta.long(time_remaining)
         else:
-            return TimeString.TimeDelta.short(self.time_remaining())
+            return TimeString.TimeDelta.short(time_remaining)
 
     def percentage(self) -> float:
         """Compute the completion percentage and return it as a float.
@@ -180,7 +198,8 @@ class EtaCalculator:
             total_items: Annotated[NonNegativeInt, Field(gt=1)],
             start_time: datetime.datetime = None,
             verbose: bool = False,
-            percent_decimals: NonNegativeInt = 2
+            percent_decimals: NonNegativeInt = 2,
+            not_enough_data_string: str = "Not enough data."
     ):
         if start_time is None:
             start_time = datetime.datetime.now()
@@ -196,6 +215,9 @@ class EtaCalculator:
 
         self.percent_decimals = None
         self.set_percent_decimals(percent_decimals)
+
+        self.not_enough_data_string = None
+        self.set_not_enough_data_string(not_enough_data_string)
 
     def __str__(self) -> str:
         """Returns the string format of this ETA object.
@@ -263,13 +285,21 @@ class EtaCalculator:
     ) -> None:
         self.percent_decimals = percent_decimals
 
+    @validate_call
+    def set_not_enough_data_string(
+            self,
+            not_enough_data_string: str
+    ) -> None:
+        self.not_enough_data_string = not_enough_data_string
+
 
 @validate_call
 def eta(
         items: Any,
         start_time: datetime.datetime = None,
         verbose: bool = False,
-        percent_decimals: NonNegativeInt = 2
+        percent_decimals: NonNegativeInt = 2,
+        not_enough_data_string: str = "Not enough data."
 ) -> tuple[Any, Eta]:
     if start_time is None:
         start_time = datetime.datetime.now()
@@ -278,7 +308,8 @@ def eta(
         total_items=len(items),
         start_time=start_time,
         verbose=verbose,
-        percent_decimals=percent_decimals
+        percent_decimals=percent_decimals,
+        not_enough_data_string=not_enough_data_string
     )
 
     for i, item in enumerate(items):

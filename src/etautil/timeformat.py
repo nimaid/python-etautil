@@ -128,7 +128,7 @@ class TimeString:
             format_string = "%#I:%M:%S %p"
 
             if datetime_in.day != now.day or datetime_in.year != now.year:
-                format_string = f"%A, %B %#d{day_of_month_suffix(datetime_in.day)}, %Y @ {format_string}"
+                format_string = f"%A, %B %#d{day_of_month_suffix(datetime_in.day)}, %Y at {format_string}"
 
             time_string = datetime_in.strftime(format_string).strip()
             time_string += f" {timezone_name(datetime_in)}"
