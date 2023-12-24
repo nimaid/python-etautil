@@ -56,12 +56,4 @@ Here is an example of the verbose output:
 Each individual property and text field is accessible via public methods.
 
 # Full Documentation
-TODO
-
-## function()
-### Description
-**Returns:** A `type` object
-- `param` **[required]**
-  - Description
-  - Type
-  - Valid values
+<p align="center"><a href="https://python-etautil.readthedocs.io/en/latest/index.html"><img src="https://brand-guidelines.readthedocs.org/_images/logo-wordmark-vertical-dark.png" width="300px" alt="etautil on Read the Docs"></a></p>

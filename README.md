@@ -1,5 +1,5 @@
 # ETA Utility
-### A simple abstraction for computing and formatting time estimates.
+### A simple abstraction for computing and formatting time estimates in Python.
 
 <p align="center"><a href="https://pypi.org/project/etautil/"><img src="https://pypi.org/static/images/logo-large.9f732b5f.svg" width="200px" alt="etautil on Pypi"></a></p>
 
@@ -63,12 +63,4 @@ Here is an example of the verbose output:
 Each individual property and text field is accessible via public methods.
 
 # Full Documentation
-TODO
-
-## function()
-### Description
-**Returns:** A `type` object
-- `param` **[required]**
-  - Description
-  - Type
-  - Valid values
+<p align="center"><a href="https://python-etautil.readthedocs.io/en/latest/index.html"><img src="https://brand-guidelines.readthedocs.org/_images/logo-wordmark-vertical-dark.png" width="300px" alt="etautil on Read the Docs"></a></p>
