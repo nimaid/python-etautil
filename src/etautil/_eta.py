@@ -1,6 +1,23 @@
 import pendulum
-from pydantic import Field, validate_call
+from pydantic import ValidationError, Field, validate_call
+from pydantic_core import InitErrorDetails
 from typing_extensions import Annotated
+
+
+def validation_error(
+        name: str,
+        value,
+        error_type: str
+) -> ValidationError:
+    return ValidationError.from_exception_data(
+        title=name,
+        line_errors=[
+            InitErrorDetails(
+                type=error_type,
+                input=value
+            )
+        ]
+    )
 
 
 class Eta:
@@ -14,7 +31,6 @@ class Eta:
     :return: A new Eta abstraction object.
     :rtype: Eta
     """
-
     @validate_call(config={'arbitrary_types_allowed': True})
     def __init__(
             self,
@@ -39,6 +55,17 @@ class Eta:
 
         self.percent_decimals = None
         self.set_percent_decimals(percent_decimals)
+
+    def _validate_item_index(
+            self,
+            item_index: int
+    ) -> None:
+        if item_index > self.total_items - 1:
+            raise validation_error(
+                name=f"{item_index=}".split("=")[0],
+                value=item_index,
+                error_type="less_than_equal"
+            )
 
     @validate_call
     def set_total_items(
@@ -95,14 +122,14 @@ class Eta:
     @validate_call
     def set_percent_decimals(
             self,
-            percent_decimals: int
+            percent_decimals: Annotated[int, Field(gt=0)]
     ) -> None:
         self.percent_decimals = percent_decimals
 
     def get_percent_decimals(self) -> int:
         return self.percent_decimals
 
-    @validate_call
+    @validate_call(config={'arbitrary_types_allowed': True})
     def get_time_taken(
             self,
             current_time: pendulum.DateTime = None
@@ -112,7 +139,7 @@ class Eta:
 
         return current_time - self.start_time
 
-    @validate_call
+    @validate_call(config={'arbitrary_types_allowed': True})
     def get_time_taken_string(
             self,
             current_time: pendulum.DateTime = None
@@ -122,12 +149,14 @@ class Eta:
 
         return self.get_time_taken(current_time).in_words()
 
-    @validate_call
+    @validate_call(config={'arbitrary_types_allowed': True})
     def get_difference(
             self,
-            current_item_index,
-            current_time=None
-    ):
+            current_item_index: Annotated[int, Field(gt=0)],
+            current_time: pendulum.DateTime = None
+    ) -> pendulum.Duration:
+        self._validate_item_index(current_item_index)
+
         if current_time is None:
             current_time = pendulum.now()
 
@@ -137,80 +166,108 @@ class Eta:
         progress_scale = (1 - percent_done) / percent_done
         return time_taken * progress_scale
 
-    def get_difference_string(self, current_item_index):
-        return self.get_difference(current_item_index).in_words()
+    @validate_call(config={'arbitrary_types_allowed': True})
+    def get_difference_string(
+            self,
+            current_item_index: Annotated[int, Field(gt=0)],
+            current_time: pendulum.DateTime = None
+    ) -> str:
+        self._validate_item_index(current_item_index)
 
-    def get_eta(self, current_item_index, current_time=None):
-        now = pendulum.now()
+        if current_time is None:
+            current_time = pendulum.now()
 
-        class Params(NoneDefaultModel):
-            current_time: typing.Optional[pendulum.DateTime] = now
-
-            class Config:
-                arbitrary_types_allowed = True
-
-        params = Params(
+        return self.get_difference(
+            current_item_index=current_item_index,
             current_time=current_time
-        )
+        ).in_words()
 
-        assert params.current_time is not None
+    @validate_call(config={'arbitrary_types_allowed': True})
+    def get_eta(
+            self,
+            current_item_index: Annotated[int, Field(gt=0)],
+            current_time: pendulum.DateTime = None
+    ) -> pendulum.DateTime:
+        self._validate_item_index(current_item_index)
+
+        if current_time is None:
+            current_time = pendulum.now()
 
         eta_diff = self.get_difference(
             current_item_index=current_item_index,
-            current_time=params.current_time
+            current_time=current_time
         )
-        eta = params.current_time + eta_diff
+        eta = current_time + eta_diff
 
         return eta
 
-    def get_eta_string(self, current_item_index):
-        return self.get_eta(current_item_index).format(self.datetime_format)
+    @validate_call(config={'arbitrary_types_allowed': True})
+    def get_eta_string(
+            self,
+            current_item_index: Annotated[int, Field(gt=0)],
+            current_time: pendulum.DateTime = None
+    ) -> str:
+        self._validate_item_index(current_item_index)
 
-    def get_percentage(self, current_item_index):
-        class Params(BaseModel):
-            current_item_index: PositiveInt = Field(None, ge=1, le=(self.total_items - 1))
+        if current_time is None:
+            current_time = pendulum.now()
 
-        params = Params(
+        return self.get_eta(
             current_item_index=current_item_index,
-        )
+            current_time=current_time
+        ).format(self.datetime_format)
 
-        return params.current_item_index / (self.total_items - 1)
+    @validate_call
+    def get_percentage(
+            self,
+            current_item_index: Annotated[int, Field(gt=0)]
+    ) -> float:
+        self._validate_item_index(current_item_index)
 
-    def get_percentage_string(self, current_item_index):
-        class Params(BaseModel):
-            current_item_index: PositiveInt = Field(None, ge=1, le=(self.total_items - 1))
+        return current_item_index / (self.total_items - 1)
 
-        params = Params(
-            current_item_index=current_item_index,
-        )
+    @validate_call
+    def get_percentage_string(
+            self,
+            current_item_index: Annotated[int, Field(gt=0)]
+    ) -> str:
+        self._validate_item_index(current_item_index)
 
-        percentage = self.get_percentage(params.current_item_index) * 100
+        percentage = self.get_percentage(current_item_index) * 100
         format_string = f"{{:.{self.percent_decimals}f}}%"
         percent_string = format_string.format(percentage)
 
         if self.verbose:
-            percent_string += f" ({params.current_item_index + 1}/{self.total_items})"
+            percent_string += f" ({current_item_index + 1}/{self.total_items})"
 
         return percent_string
 
-    def get_progress_string(self, current_item_index, sep=" | "):
-        class Params(BaseModel):
-            current_item_index: PositiveInt = Field(None, ge=1, le=(self.total_items - 1))
-            sep: str
+    @validate_call
+    def get_progress_string(
+            self,
+            current_item_index: Annotated[int, Field(gt=0)],
+            sep: str = " | "
+    ) -> str:
+        self._validate_item_index(current_item_index)
 
-        params = Params(
-            current_item_index=current_item_index,
-            sep=sep
-        )
+        current_time = pendulum.now()
 
-        percent_string = self.get_percentage_string(params.current_item_index)
+        percent_string = self.get_percentage_string(current_item_index)
 
-        if params.current_item_index <= 0:
+        if current_item_index <= 0:
             return percent_string
 
-        difference_string = self.get_difference_string(params.current_item_index)
-        eta_string = self.get_eta_string(params.current_item_index)
+        difference_string = self.get_difference_string(
+            current_item_index=current_item_index,
+            current_time=current_time
+        )
+        eta_string = self.get_eta_string(
+            current_item_index=current_item_index,
+            current_time=current_time
+        )
+
         if self.verbose:
-            return params.sep.join([percent_string, f"Time remaining: {difference_string}", f"ETA: {eta_string}"])
-        else:
-            return params.sep.join([percent_string, difference_string, eta_string])
+            difference_string = f"Time remaining: {difference_string}"
+            eta_string = f"ETA: {eta_string}"
+
+        return sep.join([percent_string, difference_string, eta_string])
