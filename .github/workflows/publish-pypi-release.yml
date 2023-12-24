@@ -3,10 +3,16 @@ run-name:  Build and Upload to PyPI (${{ github.actor }})
 on:
   push:
     branches:
-      - dev
+      - master
 jobs:
   Build-PyPI:
+    name: Build and Upload to PyPI
     runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/etautil
+    permissions:
+      id-token: write
     steps:
       - run: echo "This job was automatically triggered by a ${{ github.event_name }} event."
       - run: echo "Running on a ${{ runner.os }} server."
@@ -16,7 +22,13 @@ jobs:
         run: python3 -m pip install build twine
       - name: Build with Python
         run: python3 -m build
-      - name: Listing directory dist/
-        run: |
-          ls ${{ github.workspace }}/dist
+      - name: Upload to PyPI
+        run:
       - run: echo "Job status is ${{ job.status }}."
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+
+
+- name: pypi-publish
+  uses: pypa/gh-action-pypi-publish@v1.8.11
