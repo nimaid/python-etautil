@@ -1,23 +1,6 @@
 import pendulum
-from pydantic import ValidationError, Field, validate_call
-from pydantic_core import InitErrorDetails
+from pydantic import ValidationError, NonNegativeInt, Field, validate_call
 from typing_extensions import Annotated
-
-
-def validation_error(
-        name: str,
-        value,
-        error_type: str
-) -> ValidationError:
-    return ValidationError.from_exception_data(
-        title=name,
-        line_errors=[
-            InitErrorDetails(
-                type=error_type,
-                input=value
-            )
-        ]
-    )
 
 
 class Eta:
@@ -34,10 +17,10 @@ class Eta:
     @validate_call(config={'arbitrary_types_allowed': True})
     def __init__(
             self,
-            total_items: Annotated[int, Field(gt=2)],
+            total_items: Annotated[int, Field(gt=1)],
             start_time: pendulum.DateTime = None,
             verbose: bool = False,
-            percent_decimals: Annotated[int, Field(gt=0)] = 2
+            percent_decimals: NonNegativeInt = 2
     ):
         if start_time is None:
             start_time = pendulum.now()
@@ -61,16 +44,12 @@ class Eta:
             item_index: int
     ) -> None:
         if item_index > self.total_items - 1:
-            raise validation_error(
-                name=f"{item_index=}".split("=")[0],
-                value=item_index,
-                error_type="less_than_equal"
-            )
+            raise IndexError(f"Item index should be less than {self.total_items - 1} (the total items - 1)")
 
     @validate_call
     def set_total_items(
             self,
-            total_items: Annotated[int, Field(gt=2)]
+            total_items: Annotated[int, Field(gt=1)]
     ) -> None:
         """Set the total number of items to process.
 
@@ -122,7 +101,7 @@ class Eta:
     @validate_call
     def set_percent_decimals(
             self,
-            percent_decimals: Annotated[int, Field(gt=0)]
+            percent_decimals: NonNegativeInt
     ) -> None:
         self.percent_decimals = percent_decimals
 
@@ -152,7 +131,7 @@ class Eta:
     @validate_call(config={'arbitrary_types_allowed': True})
     def get_difference(
             self,
-            current_item_index: Annotated[int, Field(gt=0)],
+            current_item_index: NonNegativeInt,
             current_time: pendulum.DateTime = None
     ) -> pendulum.Duration:
         self._validate_item_index(current_item_index)
@@ -169,7 +148,7 @@ class Eta:
     @validate_call(config={'arbitrary_types_allowed': True})
     def get_difference_string(
             self,
-            current_item_index: Annotated[int, Field(gt=0)],
+            current_item_index: NonNegativeInt,
             current_time: pendulum.DateTime = None
     ) -> str:
         self._validate_item_index(current_item_index)
@@ -185,7 +164,7 @@ class Eta:
     @validate_call(config={'arbitrary_types_allowed': True})
     def get_eta(
             self,
-            current_item_index: Annotated[int, Field(gt=0)],
+            current_item_index: NonNegativeInt,
             current_time: pendulum.DateTime = None
     ) -> pendulum.DateTime:
         self._validate_item_index(current_item_index)
@@ -204,7 +183,7 @@ class Eta:
     @validate_call(config={'arbitrary_types_allowed': True})
     def get_eta_string(
             self,
-            current_item_index: Annotated[int, Field(gt=0)],
+            current_item_index: NonNegativeInt,
             current_time: pendulum.DateTime = None
     ) -> str:
         self._validate_item_index(current_item_index)
@@ -220,7 +199,7 @@ class Eta:
     @validate_call
     def get_percentage(
             self,
-            current_item_index: Annotated[int, Field(gt=0)]
+            current_item_index: NonNegativeInt
     ) -> float:
         self._validate_item_index(current_item_index)
 
@@ -229,7 +208,7 @@ class Eta:
     @validate_call
     def get_percentage_string(
             self,
-            current_item_index: Annotated[int, Field(gt=0)]
+            current_item_index: NonNegativeInt
     ) -> str:
         self._validate_item_index(current_item_index)
 
@@ -245,7 +224,7 @@ class Eta:
     @validate_call
     def get_progress_string(
             self,
-            current_item_index: Annotated[int, Field(gt=0)],
+            current_item_index: NonNegativeInt,
             sep: str = " | "
     ) -> str:
         self._validate_item_index(current_item_index)
