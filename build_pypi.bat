@@ -8,7 +8,7 @@ set DISTDIR=%ORIGDIR%\dist
 
 call conda activate %BUILDENVNAME%
 
-if %1 == "upload" goto UPLOAD
+if "%~1" == "upload" goto UPLOAD
 
 echo Cleaning up before making release...
 del /f /s /q "%DISTDIR%" 1>nul 2>&1
