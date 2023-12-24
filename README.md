@@ -12,7 +12,7 @@ pip install etautil
 
 ```python
 import time, random
-from etautil import Eta
+from etautil import EtaCalculator
 
 
 # Just a placeholder function that takes a random amount of time
@@ -23,11 +23,11 @@ def process_item(item):
 item_count = 10000
 print(f"Processing {item_count} items...")
 
-eta = Eta(item_count)  # Starts keeping time now
+eta = EtaCalculator(item_count)  # Starts keeping time now
 for item in range(item_count):
-  print(eta.progress_string(item))  # Print the current progress stats
+    print(eta.progress_string(item))  # Print the current progress stats
 
-  process_item(item)
+    process_item(item)
 
 print(f"Done processing {item_count} items in {eta.time_taken_string()}!\n")
 ```

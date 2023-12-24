@@ -1,5 +1,5 @@
 """A simple abstraction for computing and formatting time estimates."""
 
-__version__ = "2.2.1"
+__version__ = "2.3.0"
 
-from ._eta import Eta
+from ._eta import Eta, EtaCalculator
