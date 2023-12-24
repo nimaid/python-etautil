@@ -8,8 +8,8 @@ import time, random
 from etautil import Eta
 
 
+# Just a placeholder function that takes a random amount of time
 def process_item(item):
-    # Just a placeholder function that takes a random amount of time
     time.sleep(random.random() * 5)
 
 
