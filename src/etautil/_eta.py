@@ -1,15 +1,23 @@
 import pendulum
-import pydantic
-import pydantic_core
+from pydantic import (
+    BaseModel,ValidationError,
+    Field, PositiveInt,
+    FieldValidationInfo, field_validator,
+    validate_call
+)
+from pydantic_core import PydanticUndefined
 import typing as typing
+from typing_extensions import Annotated
 
 
-class NoneDefaultModel(pydantic.BaseModel):
-    @pydantic.field_validator("*", mode="before")
+# TODO: Use @validate_call decorator instead
+# TODO: Use this with new @validate_call decorator somehow
+class NoneDefaultModel(BaseModel):
+    @field_validator("*", mode="before")
     @classmethod
-    def use_default_value(cls, value: typing.Any, info: pydantic.FieldValidationInfo) -> typing.Any:
+    def use_default_value(cls, value: typing.Any, info: FieldValidationInfo) -> typing.Any:
         if (
-                cls.model_fields[info.field_name].get_default() is not pydantic_core.PydanticUndefined
+                cls.model_fields[info.field_name].get_default() is not PydanticUndefined
                 and not cls.model_fields[info.field_name].is_required()
                 and value is None
         ):
@@ -29,11 +37,12 @@ class Eta:
     :return: A new Eta abstraction object.
     :rtype: Eta
     """
+    @validate_call(config={'arbitrary_types_allowed': True})
     def __init__(self,
-                 total_items: int,
-                 start_time: pendulum.DateTime = None,
+                 total_items: Annotated[int, Field(gt=2)],
+                 start_time: pendulum.DateTime = pendulum.now(),
                  verbose: bool = False,
-                 percent_decimals: int = 2
+                 percent_decimals: Annotated[int, Field(gt=0)] = 2
                  ):
 
         self.total_items = None
@@ -50,21 +59,17 @@ class Eta:
         self.percent_decimals = None
         self.set_percent_decimals(percent_decimals)
 
-    def set_total_items(self, total_items: int) -> None:
+    @validate_call
+    def set_total_items(self,
+                        total_items: Annotated[int, Field(gt=2)]
+                        ) -> None:
         """Set the total number of items to process.
 
         :param int total_items: The total number of items to process, used in computations.
         :raises pydantic.ValidationError: Raised when a parameter is invalid.
         :rtype: None
         """
-        class Params(pydantic.BaseModel):
-            total_items: pydantic.PositiveInt = pydantic.Field(None, ge=2)
-
-        params = Params(
-            total_items=total_items
-        )
-
-        self.total_items = params.total_items
+        self.total_items = total_items
 
     def get_total_items(self) -> int:
         """Get the total number of items to process.
@@ -74,22 +79,11 @@ class Eta:
         """
         return self.total_items
 
-    def set_start_time(self, start_time: pendulum.DateTime = None) -> None:
-        now = pendulum.now()
-
-        class Params(NoneDefaultModel):
-            start_time: typing.Optional[pendulum.DateTime] = now
-
-            class Config:
-                arbitrary_types_allowed = True
-
-        params = Params(
-            start_time=start_time
-        )
-
-        assert params.start_time is not None
-
-        self.start_time = params.start_time
+    @validate_call(config={'arbitrary_types_allowed': True})
+    def set_start_time(self,
+                       start_time: pendulum.DateTime = pendulum.now()
+                       ) -> None:
+        self.start_time = start_time
 
     def get_start_time(self) -> pendulum.DateTime:
         return self.start_time
@@ -98,7 +92,7 @@ class Eta:
         return self.start_time.format(self.datetime_format)
 
     def set_verbose(self, verbose: bool) -> None:
-        class Params(pydantic.BaseModel):
+        class Params(BaseModel):
             verbose: bool
 
         params = Params(
@@ -112,12 +106,12 @@ class Eta:
         else:
             self.datetime_format = "YYYY/MM/DD @ h:mm:ss A"
 
-    def get_verbose(self):
+    def get_verbose(self) -> bool:
         return self.verbose
 
     def set_percent_decimals(self, percent_decimals: int) -> None:
-        class Params(pydantic.BaseModel):
-            percent_decimals: pydantic.PositiveInt
+        class Params(BaseModel):
+            percent_decimals: PositiveInt
 
         params = Params(
             percent_decimals=percent_decimals
@@ -125,10 +119,10 @@ class Eta:
 
         self.percent_decimals = params.percent_decimals
 
-    def get_percent_decimals(self):
+    def get_percent_decimals(self) -> int:
         return self.percent_decimals
 
-    def get_time_taken(self, current_time=None):
+    def get_time_taken(self, current_time: pendulum.DateTime = None) -> pendulum.Duration:
         now = pendulum.now()
 
         class Params(NoneDefaultModel):
@@ -145,14 +139,14 @@ class Eta:
 
         return params.current_time - self.start_time
 
-    def get_time_taken_string(self, current_time=None):
+    def get_time_taken_string(self, current_time: pendulum.DateTime = None) -> str:
         return self.get_time_taken(current_time).in_words()
 
     def get_difference(self, current_item_index, current_time=None):
         now = pendulum.now()
 
         class Params(NoneDefaultModel):
-            current_item_index: pydantic.PositiveInt = pydantic.Field(None, ge=1, le=(self.total_items - 1))
+            current_item_index: PositiveInt = Field(None, ge=1, le=(self.total_items - 1))
             current_time: typing.Optional[pendulum.DateTime] = now
 
             class Config:
@@ -201,8 +195,8 @@ class Eta:
         return self.get_eta(current_item_index).format(self.datetime_format)
 
     def get_percentage(self, current_item_index):
-        class Params(pydantic.BaseModel):
-            current_item_index: pydantic.PositiveInt = pydantic.Field(None, ge=1, le=(self.total_items - 1))
+        class Params(BaseModel):
+            current_item_index: PositiveInt = Field(None, ge=1, le=(self.total_items - 1))
 
         params = Params(
             current_item_index=current_item_index,
@@ -211,8 +205,8 @@ class Eta:
         return params.current_item_index / (self.total_items - 1)
 
     def get_percentage_string(self, current_item_index):
-        class Params(pydantic.BaseModel):
-            current_item_index: pydantic.PositiveInt = pydantic.Field(None, ge=1, le=(self.total_items - 1))
+        class Params(BaseModel):
+            current_item_index: PositiveInt = Field(None, ge=1, le=(self.total_items - 1))
 
         params = Params(
             current_item_index=current_item_index,
@@ -228,8 +222,8 @@ class Eta:
         return percent_string
 
     def get_progress_string(self, current_item_index, sep=" | "):
-        class Params(pydantic.BaseModel):
-            current_item_index: pydantic.PositiveInt = pydantic.Field(None, ge=1, le=(self.total_items - 1))
+        class Params(BaseModel):
+            current_item_index: PositiveInt = Field(None, ge=1, le=(self.total_items - 1))
             sep: str
 
         params = Params(
