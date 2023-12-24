@@ -43,6 +43,12 @@ class Eta:
             self,
             item_index: NonNegativeInt
     ) -> None:
+        """Validate that an index is not larger than the total items and raise an IndexError otherwise.
+
+        :param int item_index: The index to test.
+        :raises IndexError: Raised when the index is too large.
+        :rtype: None
+        """
         if item_index > self.total_items - 1:
             raise IndexError(f"Item index should be less than {self.total_items - 1} (the total items - 1)")
 
@@ -80,7 +86,7 @@ class Eta:
     def get_start_time(self) -> pendulum.DateTime:
         return self.start_time
 
-    def get_start_time_string(self) -> str:
+    def start_time_string(self) -> str:
         return self.start_time.format(self.datetime_format)
 
     @validate_call
@@ -109,7 +115,7 @@ class Eta:
         return self.percent_decimals
 
     @validate_call(config={'arbitrary_types_allowed': True})
-    def get_time_taken(
+    def time_taken(
             self,
             current_time: pendulum.DateTime = None
     ) -> pendulum.Duration:
@@ -119,17 +125,17 @@ class Eta:
         return current_time - self.start_time
 
     @validate_call(config={'arbitrary_types_allowed': True})
-    def get_time_taken_string(
+    def time_taken_string(
             self,
             current_time: pendulum.DateTime = None
     ) -> str:
         if current_time is None:
             current_time = pendulum.now()
 
-        return self.get_time_taken(current_time).in_words()
+        return self.time_taken(current_time).in_words()
 
     @validate_call(config={'arbitrary_types_allowed': True})
-    def get_difference(
+    def time_remaining(
             self,
             current_item_index: NonNegativeInt,
             current_time: pendulum.DateTime = None
@@ -139,14 +145,14 @@ class Eta:
         if current_time is None:
             current_time = pendulum.now()
 
-        time_taken = self.get_time_taken(current_time)
-        percent_done = self.get_percentage(current_item_index)
+        time_taken = self.time_taken(current_time)
+        percent_done = self.percentage(current_item_index)
 
         progress_scale = (1 - percent_done) / percent_done
         return time_taken * progress_scale
 
     @validate_call(config={'arbitrary_types_allowed': True})
-    def get_difference_string(
+    def time_remaining_string(
             self,
             current_item_index: NonNegativeInt,
             current_time: pendulum.DateTime = None
@@ -156,13 +162,13 @@ class Eta:
         if current_time is None:
             current_time = pendulum.now()
 
-        return self.get_difference(
+        return self.time_remaining(
             current_item_index=current_item_index,
             current_time=current_time
         ).in_words()
 
     @validate_call(config={'arbitrary_types_allowed': True})
-    def get_eta(
+    def eta(
             self,
             current_item_index: NonNegativeInt,
             current_time: pendulum.DateTime = None
@@ -172,7 +178,7 @@ class Eta:
         if current_time is None:
             current_time = pendulum.now()
 
-        eta_diff = self.get_difference(
+        eta_diff = self.time_remaining(
             current_item_index=current_item_index,
             current_time=current_time
         )
@@ -181,7 +187,7 @@ class Eta:
         return eta
 
     @validate_call(config={'arbitrary_types_allowed': True})
-    def get_eta_string(
+    def eta_string(
             self,
             current_item_index: NonNegativeInt,
             current_time: pendulum.DateTime = None
@@ -191,13 +197,13 @@ class Eta:
         if current_time is None:
             current_time = pendulum.now()
 
-        return self.get_eta(
+        return self.eta(
             current_item_index=current_item_index,
             current_time=current_time
         ).format(self.datetime_format)
 
     @validate_call
-    def get_percentage(
+    def percentage(
             self,
             current_item_index: NonNegativeInt
     ) -> float:
@@ -206,13 +212,13 @@ class Eta:
         return current_item_index / (self.total_items - 1)
 
     @validate_call
-    def get_percentage_string(
+    def percentage_string(
             self,
             current_item_index: NonNegativeInt
     ) -> str:
         self._validate_item_index(current_item_index)
 
-        percentage = self.get_percentage(current_item_index) * 100
+        percentage = self.percentage(current_item_index) * 100
         format_string = f"{{:.{self.percent_decimals}f}}%"
         percent_string = format_string.format(percentage)
 
@@ -222,7 +228,7 @@ class Eta:
         return percent_string
 
     @validate_call
-    def get_progress_string(
+    def progress_string(
             self,
             current_item_index: NonNegativeInt,
             sep: str = " | "
@@ -231,16 +237,16 @@ class Eta:
 
         current_time = pendulum.now()
 
-        percent_string = self.get_percentage_string(current_item_index)
+        percent_string = self.percentage_string(current_item_index)
 
         if current_item_index <= 0:
             return percent_string
 
-        difference_string = self.get_difference_string(
+        difference_string = self.time_remaining_string(
             current_item_index=current_item_index,
             current_time=current_time
         )
-        eta_string = self.get_eta_string(
+        eta_string = self.eta_string(
             current_item_index=current_item_index,
             current_time=current_time
         )
