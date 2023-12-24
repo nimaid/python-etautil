@@ -1,5 +1,5 @@
 # ETA Utility
-### A library of tools for tracking, computing, and formatting time estimates.
+### A library for tracking, computing, and formatting time estimates.
 
 ## Basic Usage
 

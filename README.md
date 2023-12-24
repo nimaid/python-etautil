@@ -1,5 +1,5 @@
 # ETA Utility
-### A library of tools for tracking, computing, and formatting time estimates in Python.
+### A library for tracking, computing, and formatting time estimates in Python.
 
 <p align="center"><a href="https://pypi.org/project/etautil/"><img src="https://pypi.org/static/images/logo-large.9f732b5f.svg" width="200px" alt="etautil on Pypi"></a></p>
 
