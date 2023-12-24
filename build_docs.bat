@@ -2,11 +2,8 @@
 
 set BUILDENVNAME=build
 
-set ORIGDIR=%CD%
-
 set SOURCEDIR=docs\src
 set BUILDDIR=docs\build
-set MODULEDIR=src\etautil
 
 call conda activate %BUILDENVNAME%
 
