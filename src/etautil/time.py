@@ -3,7 +3,7 @@ import datetime
 from dataclasses import dataclass
 from pydantic import BaseModel, NonNegativeInt, NonNegativeFloat, PositiveInt, validate_call
 
-from .constants import TimeDefaults
+from etautil.constants import TimeDefaults
 
 class SplitTime(BaseModel):
     """Data class for holding split time values.

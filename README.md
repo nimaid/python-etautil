@@ -74,10 +74,10 @@ You can also build a custom message piece-by-piece, like so:
 
 ```python
 print(f"Processing item: '{item}'")
-print(f"  Completed: {eta.string(eta.EtaField.COMPLETION)}")
-print(f"  Time taken: {eta.string(eta.EtaField.TIME_TAKEN)}")
-print(f"  Time remaining: {eta.string(eta.EtaField.TIME_REMAINING)}")
-print(f"  ETA: {eta.string(eta.EtaField.ETA)}")
+print(f"  Completed: {eta.string(eta.Value.COMPLETION)}")
+print(f"  Time taken: {eta.string(eta.Value.TIME_TAKEN)}")
+print(f"  Time remaining: {eta.string(eta.Value.TIME_REMAINING)}")
+print(f"  ETA: {eta.string(eta.Value.ETA)}")
 ```
 This produces the following output:
 ```

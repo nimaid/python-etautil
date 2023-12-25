@@ -4,12 +4,8 @@ from enum import Enum
 from typing import Any, Annotated, Iterator, Sequence
 from pydantic import NonNegativeInt, Field, validate_call
 
-from .time import TimeString
-from .constants import EtaDefaults
-
-# TODO: Add a `statistics_string()` method that is focused on all stats (incl. time taken), not just progress
-# TODO: Add eta_bar() wrapper for eta_calc()
-# TODO: Move to `etatime` package, make `etautil` just a wrapper for compatibility
+from etautil.time import TimeString
+from etautil.constants import EtaDefaults
 
 
 class Eta:
@@ -26,23 +22,25 @@ class Eta:
     :ivar int total_items: The total number of items to process, used in computations.
     :ivar int item_index: The index of the item about to be processed (0-indexed).
     :ivar datetime.datetime start_time: The starting time to use for the computation.
-    :ivar current_time: The time to use for the computation.
-
+    :ivar datetime.datetime current_time: The time to use for the computation.
     :ivar datetime.datetime eta: The estimated completion time.
     :ivar datetime.timedelta time_remaining: The time remaining.
-    :ivar float percentage: The completion percentage.
+    :ivar float completion: The completion percentage.
     :ivar datetime.timedelta time_taken: The time taken.
 
     :raises pydantic.ValidationError: Raised when a parameter is invalid.
     :raises IndexError: Raised when the index is too large.
     """
-    class EtaField(Enum):
-        START_TIME = 1
-        CURRENT_TIME = 2
-        TIME_REMAINING = 3
-        TIME_TAKEN = 4
+    class Value(Enum):
+        """An enum with attributes representing the values of the Eta object."""
+        TOTAL_ITEMS = 1
+        ITEM_INDEX = 2
+        START_TIME = 3
+        CURRENT_TIME = 4
         ETA = 5
-        COMPLETION = 6
+        TIME_REMAINING = 6
+        COMPLETION = 7
+        TIME_TAKEN = 8
 
     @validate_call
     def __init__(
@@ -149,20 +147,8 @@ class Eta:
         """
         return self.current_time - self.start_time
 
-    def _percentage_string(self) -> str:
-        """Compute the completion percentage and return it as a string.
-
-        :return: The completion percentage as a human-readable string.
-        :rtype: str
-        """
-        percent_string = self.percent_format.format(self.completion * 100)
-        if self.verbose:
-            percent_string += f" ({self.item_index}/{self.total_items})"
-
-        return percent_string
-
     @validate_call
-    def string(self, field: EtaField) -> str:
+    def string(self, field: Value) -> str:
         """Convert a specific field of this object into a human-readable string.
 
         :param StringField field: The specific field to convert to a string.
@@ -171,39 +157,45 @@ class Eta:
         :rtype: str
         """
         match field:
-            case self.EtaField.START_TIME:
+            case self.Value.START_TIME:
                 field_string = TimeString.automatic(
                     time_in=self.start_time,
                     verbose=self.verbose
                 )
-            case self.EtaField.CURRENT_TIME:
+            case self.Value.CURRENT_TIME:
                 field_string = TimeString.automatic(
                     time_in=self.start_time,
                     verbose=self.verbose
                 )
-            case self.EtaField.TIME_REMAINING:
+            case self.Value.TIME_REMAINING:
                 if self.time_remaining is None:
-                    field_string = EtaDefaults.not_enough_data_string
+                    field_string = self.not_enough_data_string
                 else:
                     field_string = TimeString.automatic(
                         time_in=self.time_remaining,
                         verbose=self.verbose
                     )
-            case self.EtaField.TIME_TAKEN:
+            case self.Value.TIME_TAKEN:
                 field_string = TimeString.automatic(
                     time_in=self.time_taken,
                     verbose=self.verbose
                 )
-            case self.EtaField.ETA:
+            case self.Value.ETA:
                 if self.eta is None:
-                    field_string = EtaDefaults.not_enough_data_string
+                    field_string = self.not_enough_data_string
                 else:
                     field_string = TimeString.automatic(
                         time_in=self.eta,
                         verbose=self.verbose
                     )
-            case self.EtaField.COMPLETION:
-                field_string = self._percentage_string()
+            case self.Value.COMPLETION:
+                field_string = self.percent_format.format(self.completion * 100)
+                if self.verbose:
+                    field_string += f" ({self.item_index}/{self.total_items})"
+            case self.Value.TOTAL_ITEMS:
+                field_string = str(self.total_items)
+            case self.Value.ITEM_INDEX:
+                field_string = str(self.item_index)
             case _:
                 field_string = EtaDefaults.invalid_string_type_string
 
@@ -223,13 +215,13 @@ class Eta:
         :return: A human-readable string that includes (in order) completion, time remaining, and ETA.
         :rtype: str
         """
-        percent_string = self.string(self.EtaField.COMPLETION)
+        percent_string = self.string(self.Value.COMPLETION)
 
         if self.item_index <= 0:
             return percent_string
 
-        difference_string = self.string(self.EtaField.TIME_REMAINING)
-        eta_string = self.string(self.EtaField.ETA)
+        difference_string = self.string(self.Value.TIME_REMAINING)
+        eta_string = self.string(self.Value.ETA)
         if self.verbose:
             difference_string = f"Time remaining: {difference_string}"
             eta_string = f"ETA: {eta_string}"
