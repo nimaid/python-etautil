@@ -12,7 +12,7 @@ def process_item(item):
     time.sleep(random.random() * 20)
 
 
-for item, eta in eta_calculator(range(10)):  # Creates a new etautil.Eta object for each item
+for item, eta in eta_calculator(range(10)):  # Creates a new Eta object for each item
     print(eta)  # Print the current progress stats
     process_item(item)  # Do your processing here
 ```
@@ -22,7 +22,7 @@ eta = None  # Initialize the eta variable here, so we can use it outside the loo
 for item, eta in eta_calculator(range(10)):
     print(eta)
     process_item(item)
-eta.complete()  # Update the last created etautil.Eta object to completed, using now as the end time
+eta.complete()  # Update the last Eta object to completed, using now as the end time
 
 print(f"Done processing {eta.total_items} items in {eta.time_taken_string}!\n")
 ```
