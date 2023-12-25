@@ -434,7 +434,7 @@ def eta_calculator(
     :param int percent_decimals: The number of decimal places to use in the percentage string.
     :param str not_enough_data_string: The string to return when there is not enough data for the desired computation.
 
-    :return: Yield a tuple of the current item and the computed Eta object.
+    :return: An iterator with a tuple of the current item and the computed Eta object.
     :rtype: Iterator[tuple[Any, Eta]]
     """
     if start_time is None:

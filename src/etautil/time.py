@@ -5,16 +5,9 @@ from pydantic import BaseModel, NonNegativeInt, NonNegativeFloat, PositiveInt, v
 
 from etautil.constants import TimeDefaults
 
-class SplitTime(BaseModel):
-    """Data class for holding split time values.
 
-    :ivar int weeks: The number of weeks.
-    :ivar int days: The number of days.
-    :ivar int hours: The number of hours.
-    :ivar int minutes: The number of minutes.
-    :ivar int seconds: The number of seconds.
-    :ivar int | float milliseconds: The number of milliseconds.
-    """
+class SplitTime(BaseModel):
+    """Data class for holding split time values."""
     weeks: NonNegativeInt
     days: NonNegativeInt
     hours: NonNegativeInt
@@ -25,7 +18,7 @@ class SplitTime(BaseModel):
 
 @validate_call
 def split_seconds(seconds_in: NonNegativeInt | NonNegativeFloat) -> SplitTime:
-    """Split seconds into days, hours, minutes, and seconds, and return a SplitTime object with those values.
+    """Split seconds into parts ranging from weeks to milliseconds and return a SplitTime object with those values.
 
     :param int seconds_in: The total number of seconds to split up.
 
