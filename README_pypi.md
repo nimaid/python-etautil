@@ -12,19 +12,20 @@ def process_item(item):
     time.sleep(random.random() * 20)
 
 
-for item, eta in eta_calculator(range(10)):  # Creates a new etautil.Eta object for each item
+for item, eta in eta_calculator(range(10)):  # Creates a new Eta object for each item
     print(eta)  # Print the current progress stats
     process_item(item)  # Do your processing here
 ```
 If you want to access the eta stats outside the loop, you can use this pattern to do so:
+
 ```python
 eta = None  # Initialize the eta variable here, so we can use it outside the loop
 for item, eta in eta_calculator(range(10)):
     print(eta)
     process_item(item)
-eta.complete()  # Update the last created etautil.Eta object to completed, using now as the end time
+eta.complete()  # Update the last Eta object to completed, using now as the end time
 
-print(f"Done processing {eta.total_items} items in {eta.time_taken_string}!\n")
+print(f"Done processing {eta.total_items} items in {eta.string(eta.StringField.TIME_TAKEN)}!\n")
 ```
 
 Here is an example of the sort of output this produces:
@@ -66,10 +67,10 @@ You can also build a custom message piece-by-piece, like so:
 
 ```python
 print(f"Processing item: '{item}'")
-print(f"  Completed: {eta.percentage_string}")
-print(f"  Time taken: {eta.time_taken_string}")
-print(f"  Time remaining: {eta.time_remaining_string}")
-print(f"  ETA: {eta.eta_string}")
+print(f"  Completed: {eta.string(eta.Value.COMPLETION)}")
+print(f"  Time taken: {eta.string(eta.Value.TIME_TAKEN)}")
+print(f"  Time remaining: {eta.string(eta.Value.TIME_REMAINING)}")
+print(f"  ETA: {eta.string(eta.Value.ETA)}")
 ```
 This produces the following output:
 ```
