@@ -7,9 +7,8 @@ from .time import TimeString
 from .constants import EtaDefaults
 
 # TODO: Add a `statistics_string()` method that is focused on all stats (incl. time taken), not just progress
-# TODO: Add eta_bar() wrapper for eta()
-# TODO: Move to `etacalc` package, make `etautil` just a wrapper for compatibility
-# TODO: Publish `timeformat` as a separate package, add custom string formatting features
+# TODO: Add eta_bar() wrapper for eta_calc()
+# TODO: Move to `etatime` package, make `etautil` just a wrapper for compatibility
 
 
 class Eta:
@@ -437,15 +436,15 @@ def eta_calculator(
         percent_decimals: NonNegativeInt = EtaDefaults.percent_decimals,
         not_enough_data_string: str = EtaDefaults.not_enough_data_string
 ) -> Iterator[tuple[Any, Eta]]:
-    """A generator that iterates over the items in an
+    """A generator that iterates over the items in a sequence and returns the items in addition to an Eta object.
 
-    :param items:
-    :param datetime.datetime start_time:
-    :param bool verbose:
-    :param percent_decimals:
-    :param not_enough_data_string:
+    :param Sequence[Any] items: The sequence to iterate over.
+    :param datetime.datetime start_time: The starting time to use for the computation, defaults to now.
+    :param bool verbose: If we should make strings verbosely or not.
+    :param int percent_decimals: The number of decimal places to use in the percentage string.
+    :param str not_enough_data_string: The string to return when there is not enough data for the desired computation.
 
-    :return:
+    :return: Yield a tuple of the current item and the computed Eta object.
     :rtype: Iterator[tuple[Any, Eta]]
     """
     if start_time is None:
