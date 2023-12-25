@@ -3,6 +3,7 @@ import datetime
 from dataclasses import dataclass
 from pydantic import BaseModel, NonNegativeInt, NonNegativeFloat, PositiveInt, validate_call
 
+from .constants import TimeDefaults
 
 class SplitTime(BaseModel):
     """Data class for holding split time values.
@@ -223,3 +224,31 @@ class TimeString:
             time_string += f" {timezone_name(datetime_in)}"
 
             return time_string
+
+    @staticmethod
+    @validate_call
+    def automatic(
+            time_in: datetime.datetime | datetime.timedelta,
+            verbose: bool
+    ):
+        """Automatically convert a datetime.datetime or datetime.timedelta object to a string and return it.
+
+        :param datetime.datetime | datetime.timedelta time_in: The object to convert.
+        :param verbose: If we should return the long or short version.
+
+        :return: The input time in a human-readable format.
+        :rtype: str
+        """
+        if isinstance(time_in, datetime.datetime):
+            if verbose:
+                return TimeString.DateTime.long(time_in)
+
+            return TimeString.DateTime.short(time_in)
+
+        if isinstance(time_in, datetime.timedelta):
+            if verbose:
+                return TimeString.TimeDelta.long(time_in)
+
+            return TimeString.TimeDelta.short(time_in)
+
+        return TimeDefaults.unknown_format_string  # Should never be called because pydantic validated the types
