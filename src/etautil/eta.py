@@ -1,6 +1,6 @@
 """Provides tools for tracking, computing, and formatting time estimates."""
 import datetime
-from typing import Any, Annotated
+from typing import Any, Annotated, Iterator, Sequence
 from pydantic import NonNegativeInt, Field, validate_call
 
 from .time import TimeString
@@ -407,6 +407,12 @@ class EtaCalculator:
             self,
             percent_decimals: NonNegativeInt
     ) -> None:
+        """Set the number of decimal places to use in the percentage string.
+
+        :param int percent_decimals: The number of decimal places to use in the percentage string.
+
+        :rtype: None
+        """
         self.percent_decimals = percent_decimals
 
     @validate_call
@@ -414,21 +420,38 @@ class EtaCalculator:
             self,
             not_enough_data_string: str
     ) -> None:
+        """Set the string to return when there is not enough data for the desired computation.
+
+        :param str not_enough_data_string: The string to return when there is not enough data for the desired computation.
+
+        :rtype: None
+        """
         self.not_enough_data_string = not_enough_data_string
 
 
 @validate_call
 def eta_calculator(
-        items: Any,
+        items: Sequence[Any],
         start_time: datetime.datetime = None,
         verbose: bool = EtaDefaults.verbose,
         percent_decimals: NonNegativeInt = EtaDefaults.percent_decimals,
         not_enough_data_string: str = EtaDefaults.not_enough_data_string
-) -> tuple[Any, Eta]:
+) -> Iterator[tuple[Any, Eta]]:
+    """A generator that iterates over the items in an
+
+    :param items:
+    :param datetime.datetime start_time:
+    :param bool verbose:
+    :param percent_decimals:
+    :param not_enough_data_string:
+
+    :return:
+    :rtype: Iterator[tuple[Any, Eta]]
+    """
     if start_time is None:
         start_time = datetime.datetime.now()
 
-    eta_calculator = EtaCalculator(
+    calculator = EtaCalculator(
         total_items=len(items),
         start_time=start_time,
         verbose=verbose,
@@ -437,4 +460,4 @@ def eta_calculator(
     )
 
     for i, item in enumerate(items):
-        yield item, eta_calculator.get_eta(i)
+        yield item, calculator.get_eta(i)

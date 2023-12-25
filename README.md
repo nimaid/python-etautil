@@ -12,7 +12,7 @@ pip install etautil
 
 ```python
 import time, random
-from etautil import eta_calculator
+from etautil.eta import eta_calculator
 
 
 # Just a placeholder function that takes a random amount of time
