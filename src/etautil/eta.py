@@ -246,7 +246,7 @@ class Eta:
         if current_time is None:
             current_time = datetime.datetime.now()
 
-        self.item_index = self.total_items - 1
+        self.item_index = self.total_items
         self.current_time = current_time
 
         self.eta = current_time
