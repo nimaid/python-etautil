@@ -17,7 +17,7 @@ class Eta:
     """Holds, computes, and formats ETA state information and time estimate info.
 
     :param int total_items: The total number of items to process, used in computations.
-    :param int current_item_index: The index of the item about to be processed (0-indexed).
+    :param int item_index: The index of the item about to be processed (0-indexed).
     :param datetime.datetime start_time: The starting time to use for the computation.
     :param datetime.datetime current_time: The time to use for the computation, defaults to the current time.
     :param bool verbose: If we should make strings verbosely or not.
@@ -25,7 +25,7 @@ class Eta:
     :param str not_enough_data_string: The string to return when there is not enough data for the desired computation.
 
     :ivar int total_items: The total number of items to process, used in computations.
-    :ivar int current_item_index: The index of the item about to be processed (0-indexed).
+    :ivar int item_index: The index of the item about to be processed (0-indexed).
     :ivar datetime.datetime start_time: The starting time to use for the computation.
     :ivar current_time: The time to use for the computation, defaults to the current time.
     :ivar bool verbose: If we should make strings verbosely or not.
@@ -50,7 +50,7 @@ class Eta:
     def __init__(
             self,
             total_items: Annotated[NonNegativeInt, Field(gt=1)],
-            current_item_index: NonNegativeInt,
+            item_index: NonNegativeInt,
             start_time: datetime.datetime,
             current_time: datetime.datetime = None,
             verbose: bool = Defaults.verbose,
@@ -61,14 +61,14 @@ class Eta:
             current_time = datetime.datetime.now()
 
         self.total_items = total_items
-        self.current_item_index = current_item_index
+        self.item_index = item_index
         self.start_time = start_time
         self.current_time = current_time
         self.verbose = verbose
         self.percent_decimals = percent_decimals
         self.not_enough_data_string = not_enough_data_string
 
-        self._validate_item_index(self.current_item_index)
+        self._validate_item_index(self.item_index)
 
         self.percent_format = f"{{:.{self.percent_decimals}f}}%"
 
@@ -174,7 +174,7 @@ class Eta:
         :return: The completion percentage as a float in range on 0.0 - 1.0.
         :rtype: float
         """
-        return self.current_item_index / self.total_items
+        return self.item_index / self.total_items
 
     def _percentage_string(self) -> str:
         """Compute the completion percentage and return it as a string.
@@ -184,7 +184,7 @@ class Eta:
         """
         percent_string = self.percent_format.format(self.percentage * 100)
         if self.verbose:
-            percent_string += f" ({self.current_item_index}/{self.total_items})"
+            percent_string += f" ({self.item_index}/{self.total_items})"
 
         return percent_string
 
@@ -223,7 +223,7 @@ class Eta:
         """
         percent_string = self._percentage_string()
 
-        if self.current_item_index <= 0:
+        if self.item_index <= 0:
             return percent_string
 
         difference_string = self._time_remaining_string()
@@ -233,6 +233,32 @@ class Eta:
             eta_string = f"ETA: {eta_string}"
 
         return sep.join([percent_string, difference_string, eta_string])
+
+    @validate_call
+    def complete(
+            self,
+            current_time: datetime.datetime = None,
+    ) -> None:
+        """Set the ETA item to completed (100%)
+
+        :param datetime.datetime current_time: The time to use for the computation, defaults to the current time.
+
+        :return:
+        """
+        if current_time is None:
+            current_time = datetime.datetime.now()
+
+        self.item_index = self.total_items - 1
+        self.current_time = current_time
+
+        self.eta = current_time
+        self.eta_string = self._eta_string()
+        self.time_remaining = datetime.timedelta(0)
+        self.time_remaining_string = self._time_remaining_string()
+        self.percentage = self._percentage()
+        self.percentage_string = self._percentage_string()
+        self.time_taken = self._time_taken()
+        self.time_taken_string = self._time_taken_string()
 
 
 class EtaCalculator:
@@ -303,12 +329,12 @@ class EtaCalculator:
     @validate_call
     def get_eta(
             self,
-            current_item_index: NonNegativeInt,
+            item_index: NonNegativeInt,
             current_time: datetime.datetime = None
     ) -> Eta:
         """Get the current ETA calculation and return it as an Eta object.
 
-        :param int current_item_index: The index of the item about to be processed (0-indexed).
+        :param int item_index: The index of the item about to be processed (0-indexed).
         :param datetime.datetime current_time: The time to use for the computation, defaults to the current time.
 
         :raises pydantic.ValidationError: Raised when a parameter is invalid.
@@ -322,7 +348,7 @@ class EtaCalculator:
 
         return Eta(
             total_items=self.total_items,
-            current_item_index=current_item_index,
+            item_index=item_index,
             start_time=self.start_time,
             current_time=current_time,
             verbose=self.verbose,
@@ -351,7 +377,7 @@ class EtaCalculator:
     ) -> None:
         """Set the start time.
 
-        :param datetime.datetime start_time: The starting time to use for the computation.
+        :param datetime.datetime start_time: The starting time to use for the computation, defaults to now.
 
         :raises pydantic.ValidationError: Raised when a parameter is invalid.
 
@@ -367,6 +393,14 @@ class EtaCalculator:
             self,
             verbose: bool
     ) -> None:
+        """Set the verbosity of the strings.
+
+        :param bool verbose: If we should make strings verbosely or not.
+
+        :raises pydantic.ValidationError: Raised when a parameter is invalid.
+
+        :rtype: None
+        """
         self.verbose = verbose
 
     @validate_call

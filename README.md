@@ -18,27 +18,28 @@ import etautil
 def process_item(item):
     time.sleep(random.random() * 20)
 
-eta = None  # Initialize here so we can use it later
+eta = None  # Initialize here so we can use it outside the loop
 for item, eta in etautil.eta(range(10)):
     print(eta)  # Print the current progress stats
     process_item(item)
-
+eta.complete()  # Set the Eta object to completed, using now as the end time
+    
 print(f"Done processing {eta.total_items} items in {eta.time_taken_string}!\n")
 ```
 
 Here is an example of the sort of output this produces:
 ```
 0.00%
-10.00% | 0:00:13 | 12:04:01 PM
-20.00% | 0:01:10 | 12:05:15 PM
-30.00% | 0:01:16 | 12:05:34 PM
-40.00% | 0:00:52 | 12:05:13 PM
-50.00% | 0:00:47 | 12:05:21 PM
-60.00% | 0:00:44 | 12:05:35 PM
-70.00% | 0:00:29 | 12:05:24 PM
-80.00% | 0:00:21 | 12:05:32 PM
-90.00% | 0:00:11 | 12:05:37 PM
-Done processing 10 items in 0:01:39!
+10.00% | 0:01:33 | 12:25:16 AM
+20.00% | 0:01:56 | 12:25:57 AM
+30.00% | 0:01:13 | 12:25:16 AM
+40.00% | 0:00:55 | 12:25:03 AM
+50.00% | 0:00:55 | 12:25:22 AM
+60.00% | 0:00:43 | 12:25:18 AM
+70.00% | 0:00:32 | 12:25:19 AM
+80.00% | 0:00:19 | 12:25:09 AM
+90.00% | 0:00:09 | 12:25:00 AM
+Done processing 10 items in 0:01:33!
 ```
 
 You can get more verbose information by replacing the for loop with this:
@@ -48,16 +49,16 @@ for item, eta in etautil.eta(range(10), verbose=True):
 Here is an example of the verbose output:
 ```
 0.00% (0/10)
-10.00% (1/10) | Time remaining: 1 minute and 45 seconds | ETA: 12:03:37 PM US Mountain Standard Time
-20.00% (2/10) | Time remaining: 1 minute and 22 seconds | ETA: 12:03:22 PM US Mountain Standard Time
-30.00% (3/10) | Time remaining: 1 minute and 3 seconds | ETA: 12:03:10 PM US Mountain Standard Time
-40.00% (4/10) | Time remaining: 1 minute and 7 seconds | ETA: 12:03:31 PM US Mountain Standard Time
-50.00% (5/10) | Time remaining: 56 seconds | ETA: 12:03:32 PM US Mountain Standard Time
-60.00% (6/10) | Time remaining: 43 seconds | ETA: 12:03:27 PM US Mountain Standard Time
-70.00% (7/10) | Time remaining: 28 seconds | ETA: 12:03:12 PM US Mountain Standard Time
-80.00% (8/10) | Time remaining: 21 seconds | ETA: 12:03:23 PM US Mountain Standard Time
-90.00% (9/10) | Time remaining: 10 seconds | ETA: 12:03:19 PM US Mountain Standard Time
-Done processing 10 items in 1 minute and 29 seconds!
+10.00% (1/10) | Time remaining: 1 minute and 54 seconds | ETA: 12:27:33 AM US Mountain Standard Time
+20.00% (2/10) | Time remaining: 1 minute and 33 seconds | ETA: 12:27:22 AM US Mountain Standard Time
+30.00% (3/10) | Time remaining: 1 minute and 7 seconds | ETA: 12:27:02 AM US Mountain Standard Time
+40.00% (4/10) | Time remaining: 50 seconds | ETA: 12:26:49 AM US Mountain Standard Time
+50.00% (5/10) | Time remaining: 51 seconds | ETA: 12:27:08 AM US Mountain Standard Time
+60.00% (6/10) | Time remaining: 41 seconds | ETA: 12:27:09 AM US Mountain Standard Time
+70.00% (7/10) | Time remaining: 28 seconds | ETA: 12:27:01 AM US Mountain Standard Time
+80.00% (8/10) | Time remaining: 20 seconds | ETA: 12:27:05 AM US Mountain Standard Time
+90.00% (9/10) | Time remaining: 10 seconds | ETA: 12:27:07 AM US Mountain Standard Time
+Done processing 10 items in 1 minute and 51 seconds!
 ```
 
 You can also build a custom message piece-by-piece, like so:
@@ -78,50 +79,50 @@ Processing item: '0'
   ETA: not enough data
 Processing item: '1'
   Completed: 10.00% (1/10)
-  Time taken: 18 seconds
-  Time remaining: 2 minutes and 39 seconds
-  ETA: 12:10:19 PM US Mountain Standard Time
+  Time taken: 11 seconds
+  Time remaining: 1 minute and 38 seconds
+  ETA: 12:29:31 AM US Mountain Standard Time
 Processing item: '2'
   Completed: 20.00% (2/10)
-  Time taken: 37 seconds
-  Time remaining: 2 minutes and 28 seconds
-  ETA: 12:10:28 PM US Mountain Standard Time
+  Time taken: 29 seconds
+  Time remaining: 1 minute and 55 seconds
+  ETA: 12:30:05 AM US Mountain Standard Time
 Processing item: '3'
   Completed: 30.00% (3/10)
-  Time taken: 49 seconds
-  Time remaining: 1 minute and 55 seconds
-  ETA: 12:10:07 PM US Mountain Standard Time
+  Time taken: 47 seconds
+  Time remaining: 1 minute and 50 seconds
+  ETA: 12:30:18 AM US Mountain Standard Time
 Processing item: '4'
   Completed: 40.00% (4/10)
-  Time taken: 1 minute and 4 seconds
-  Time remaining: 1 minute and 36 seconds
-  ETA: 12:10:03 PM US Mountain Standard Time
+  Time taken: 54 seconds
+  Time remaining: 1 minute and 21 seconds
+  ETA: 12:29:57 AM US Mountain Standard Time
 Processing item: '5'
   Completed: 50.00% (5/10)
-  Time taken: 1 minute and 22 seconds
-  Time remaining: 1 minute and 22 seconds
-  ETA: 12:10:06 PM US Mountain Standard Time
+  Time taken: 56 seconds
+  Time remaining: 56 seconds
+  ETA: 12:29:33 AM US Mountain Standard Time
 Processing item: '6'
   Completed: 60.00% (6/10)
-  Time taken: 1 minute and 42 seconds
-  Time remaining: 1 minute and 8 seconds
-  ETA: 12:10:12 PM US Mountain Standard Time
+  Time taken: 1 minute and 3 seconds
+  Time remaining: 42 seconds
+  ETA: 12:29:27 AM US Mountain Standard Time
 Processing item: '7'
   Completed: 70.00% (7/10)
-  Time taken: 1 minute and 43 seconds
-  Time remaining: 44 seconds
-  ETA: 12:09:50 PM US Mountain Standard Time
+  Time taken: 1 minute and 22 seconds
+  Time remaining: 35 seconds
+  ETA: 12:29:38 AM US Mountain Standard Time
 Processing item: '8'
   Completed: 80.00% (8/10)
-  Time taken: 1 minute and 51 seconds
-  Time remaining: 28 seconds
-  ETA: 12:09:41 PM US Mountain Standard Time
+  Time taken: 1 minute and 28 seconds
+  Time remaining: 22 seconds
+  ETA: 12:29:32 AM US Mountain Standard Time
 Processing item: '9'
   Completed: 90.00% (9/10)
-  Time taken: 1 minute and 56 seconds
-  Time remaining: 13 seconds
-  ETA: 12:09:31 PM US Mountain Standard Time
-Done processing 10 items in 1 minute and 56 seconds!
+  Time taken: 1 minute and 48 seconds
+  Time remaining: 12 seconds
+  ETA: 12:29:41 AM US Mountain Standard Time
+Done processing 10 items in 1 minute and 57 seconds!
 ```
 
 # Full Documentation
