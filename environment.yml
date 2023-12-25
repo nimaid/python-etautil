@@ -4,5 +4,4 @@ channels:
 dependencies:
   - python >= 3.10
   - pip
-  - pylint
-  - pydantic
+    - etatime >= 2.6.5
