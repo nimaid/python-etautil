@@ -3,6 +3,51 @@ import datetime
 from pydantic import NonNegativeInt, NonNegativeFloat, PositiveInt, validate_call
 
 
+@validate_call
+def split_seconds(seconds_in: NonNegativeInt | NonNegativeFloat) -> dict[str, int | float]:
+    """Split seconds into days, hours, minutes, and seconds, and return a dictionary with those values.
+
+    :param int seconds_in: The total number of seconds to split up.
+    :return: A dictionary with the split weeks ['w'], days ['d'], hours ['h'], minutes ['m'], and seconds ['s'].
+    :rtype: dict[str, Union[int, float]]
+    """
+    weeks, remainder = divmod(seconds_in, (60 ** 2) * 24 * 7)
+    days, remainder = divmod(remainder, (60 ** 2) * 24)
+    hours, remainder = divmod(remainder, 60 ** 2)
+    minutes, seconds = divmod(remainder, 60)
+
+    return {
+        "w": round(weeks),
+        "d": round(days),
+        "h": round(hours),
+        "m": round(minutes),
+        "s": seconds
+    }
+
+
+@validate_call
+def day_of_month_suffix(day: PositiveInt) -> str:
+    if day in [11, 12, 13]:
+        return "th"
+
+    match day % 10:
+        case 1:
+            return "st"
+        case 2:
+            return "nd"
+        case 3:
+            return "rd"
+        case _:
+            return "th"
+
+
+@validate_call
+def timezone_name(datetime_in: datetime.datetime) -> str:
+    timezone = datetime_in.astimezone()
+
+    return timezone.tzinfo.tzname(timezone)
+
+
 class TimeString:
     """Container class with methods to process time-based objects and return human-readable strings."""
     class TimeDelta:
@@ -92,44 +137,3 @@ class TimeString:
             time_string += f" {timezone_name(datetime_in)}"
 
             return time_string
-
-@validate_call
-def split_seconds(seconds_in: NonNegativeInt | NonNegativeFloat) -> dict[str, int | float]:
-    """Split seconds into days, hours, minutes, and seconds, and return a dictionary with those values.
-
-    :param int seconds_in: The total number of seconds to split up.
-    :return: A dictionary with the split weeks ['w'], days ['d'], hours ['h'], minutes ['m'], and seconds ['s'].
-    :rtype: dict[str, Union[int, float]]
-    """
-    weeks, remainder = divmod(seconds_in, (60 ** 2) * 24 * 7)
-    days, remainder = divmod(remainder, (60 ** 2) * 24)
-    hours, remainder = divmod(remainder, 60 ** 2)
-    minutes, seconds = divmod(remainder, 60)
-
-    return {
-        "w": round(weeks),
-        "d": round(days),
-        "h": round(hours),
-        "m": round(minutes),
-        "s": seconds
-    }
-
-
-@validate_call
-def day_of_month_suffix(day: PositiveInt) -> str:
-    match day % 10:
-        case 1:
-            return"st"
-        case 2:
-            return "nd"
-        case 3:
-            return "rd"
-        case _:
-            return "th"
-
-
-@validate_call
-def timezone_name(datetime_in: datetime.datetime) -> str:
-    timezone = datetime_in.astimezone()
-
-    return timezone.tzinfo.tzname(timezone)
