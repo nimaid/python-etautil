@@ -9,7 +9,6 @@ pip install etautil
 ```
 
 ## Basic Usage
-
 ```python
 import time, random
 from etautil.eta import eta_calculator

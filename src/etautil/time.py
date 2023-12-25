@@ -1,33 +1,63 @@
 """Provides tools to manipulate and format various time-based objects."""
 import datetime
-from pydantic import NonNegativeInt, NonNegativeFloat, PositiveInt, validate_call
+from dataclasses import dataclass
+from pydantic import BaseModel, NonNegativeInt, NonNegativeFloat, PositiveInt, validate_call
+
+
+class SplitTime(BaseModel):
+    """Data class for holding split time values.
+
+    :ivar int weeks: The number of weeks.
+    :ivar int days: The number of days.
+    :ivar int hours: The number of hours.
+    :ivar int minutes: The number of minutes.
+    :ivar int seconds: The number of seconds.
+    :ivar int | float milliseconds: The number of milliseconds.
+    """
+    weeks: NonNegativeInt
+    days: NonNegativeInt
+    hours: NonNegativeInt
+    minutes: NonNegativeInt
+    seconds: NonNegativeInt
+    milliseconds: NonNegativeInt | NonNegativeFloat
 
 
 @validate_call
-def split_seconds(seconds_in: NonNegativeInt | NonNegativeFloat) -> dict[str, int | float]:
-    """Split seconds into days, hours, minutes, and seconds, and return a dictionary with those values.
+def split_seconds(seconds_in: NonNegativeInt | NonNegativeFloat) -> SplitTime:
+    """Split seconds into days, hours, minutes, and seconds, and return a SplitTime object with those values.
 
     :param int seconds_in: The total number of seconds to split up.
-    :return: A dictionary with the split weeks ['w'], days ['d'], hours ['h'], minutes ['m'], and seconds ['s'].
-    :rtype: dict[str, Union[int, float]]
+
+    :return: A SplitTime object with the split weeks, days, hours, minutes, seconds, and milliseconds.
+    :rtype: SplitTime
     """
     weeks, remainder = divmod(seconds_in, (60 ** 2) * 24 * 7)
     days, remainder = divmod(remainder, (60 ** 2) * 24)
     hours, remainder = divmod(remainder, 60 ** 2)
-    minutes, seconds = divmod(remainder, 60)
+    minutes, remainder = divmod(remainder, 60)
+    seconds = int(remainder)
+    milliseconds = (remainder % 1) * 1000
 
-    return {
-        "w": round(weeks),
-        "d": round(days),
-        "h": round(hours),
-        "m": round(minutes),
-        "s": seconds
-    }
+    return SplitTime(
+        weeks=weeks,
+        days=days,
+        hours=hours,
+        minutes=minutes,
+        seconds=seconds,
+        milliseconds=milliseconds
+    )
 
 
 @validate_call
 def day_of_month_suffix(day: PositiveInt) -> str:
-    if day in [11, 12, 13]:
+    """Return the appropriate suffix for a specified day of the month.
+
+    :param int day: The day of the month to get the suffix for.
+
+    :return: A string that is either 'st', 'nd', 'rd', or 'th'.
+    :rtype: str
+    """
+    if day % 100 in [11, 12, 13]:
         return "th"
 
     match day % 10:
@@ -42,60 +72,101 @@ def day_of_month_suffix(day: PositiveInt) -> str:
 
 
 @validate_call
+def day_of_month_string(day: PositiveInt) -> str:
+    """Convert a numerical day of the month to a user-friendly string.
+
+    :param int day: The day of the month to convert.
+
+    :return: A string with the day of the month and an appropriate suffix ('st', 'nd', 'rd', or 'th').
+    :rtype: str
+    """
+    return f"{day}{day_of_month_suffix(day)}"
+
+
+@validate_call
 def timezone_name(datetime_in: datetime.datetime) -> str:
+    """Get the full timezone name from a datetime.datetime object.
+
+    :param datetime.datetime datetime_in: The datetime.datetime object to get the timezone for.
+
+    :return: A human-readable string with the full timezone name spelled out.
+    :rtype: str
+    """
     timezone = datetime_in.astimezone()
 
     return timezone.tzinfo.tzname(timezone)
 
 
+@dataclass
 class TimeString:
-    """Container class with methods to format various datetime objects into human-readable strings."""
+    """Data class with methods to format various datetime objects into human-readable strings."""
+    @dataclass
     class TimeDelta:
-        """Container class with methods to format datetime.timedelta objects and return human-readable strings."""
+        """Data class with methods to format datetime.timedelta objects and return human-readable strings."""
         @staticmethod
         @validate_call
         def short(timedelta_in: datetime.timedelta) -> str:
+            """Return the datetime.timedelta object as a short human-readable string.
+
+            :param datetime.timedelta timedelta_in: The timedelta to convert.
+
+            :return: The datetime.timedelta object as a short human-readable string
+            :rtype: str
+            """
             ago_string = ""
             if timedelta_in < datetime.timedelta(0):
                 timedelta_in = -timedelta_in
                 ago_string += " ago"
 
-            time_parts = split_seconds(round(timedelta_in.total_seconds()))
+            time_parts = split_seconds(timedelta_in.total_seconds())
 
-            time_string = (f"{time_parts['h']}"
-                           f":{time_parts['m']:02}"
-                           f":{time_parts['s']:02}"
+            time_string = (f"{time_parts.hours}"
+                           f":{time_parts.minutes:02}"
+                           f":{time_parts.seconds:02}"
                            f"{ago_string}")
 
-            if time_parts['d'] > 0:
-                time_string = f"{time_parts['d']}D {time_string}"
+            if time_parts.days > 0:
+                time_string = f"{time_parts.days}D {time_string}"
 
-            if time_parts['w'] > 0:
-                time_string = f"{time_parts['w']}W {time_string}"
+            if time_parts.weeks > 0:
+                time_string = f"{time_parts.weeks}W {time_string}"
 
             return time_string
 
         @staticmethod
         @validate_call
         def long(timedelta_in: datetime.timedelta) -> str:
+            """Return the datetime.timedelta object as a long human-readable string.
+
+            :param datetime.timedelta timedelta_in: The timedelta to convert.
+
+            :return: The datetime.timedelta object as a long human-readable string
+            :rtype: str
+            """
             ago_string = ""
             if timedelta_in < datetime.timedelta(0):
                 timedelta_in = -timedelta_in
                 ago_string += " ago"
 
-            time_parts = split_seconds(round(timedelta_in.total_seconds()))
+            time_parts = split_seconds(timedelta_in.total_seconds())
 
             time_strings = []
 
-            for key, name in (("w", "week"), ("d", "day"), ("h", "hour"), ("m", "minute"), ("s", "second")):
-                if key == "s":
+            for value, name in (
+                    (time_parts.weeks, "week"),
+                    (time_parts.days, "day"),
+                    (time_parts.hours, "hour"),
+                    (time_parts.minutes, "minute"),
+                    (time_parts.seconds, "second")
+            ):
+                if name == "second":
                     no_time_strings = len(time_strings) == 0
                 else:
                     no_time_strings = False
 
-                if time_parts[key] > 0 or no_time_strings:
-                    time_strings.append(f"{time_parts[key]} {name}")
-                    if time_parts[key] != 1:
+                if value > 0 or no_time_strings:
+                    time_strings.append(f"{value} {name}")
+                    if value != 1:
                         time_strings[-1] += "s"
 
             if len(time_strings) == 1:
@@ -109,11 +180,19 @@ class TimeString:
 
             return time_string
 
+    @dataclass
     class DateTime:
-        """Container class with methods to format datetime.datetime objects and return human-readable strings."""
+        """Data class with methods to format datetime.datetime objects and return human-readable strings."""
         @staticmethod
         @validate_call
         def short(datetime_in: datetime.datetime) -> str:
+            """Return the datetime.datetime object as a short human-readable string.
+
+            :param datetime.datetime datetime_in: The timedelta to convert.
+
+            :return: The datetime.datetime object as a short human-readable string
+            :rtype: str
+            """
             now = datetime.datetime.now()
 
             format_string = "%#I:%M:%S %p"
@@ -126,12 +205,19 @@ class TimeString:
         @staticmethod
         @validate_call
         def long(datetime_in: datetime.datetime) -> str:
+            """Return the datetime.datetime object as a long human-readable string.
+
+            :param datetime.datetime datetime_in: The timedelta to convert.
+
+            :return: The datetime.datetime object as a long human-readable string
+            :rtype: str
+            """
             now = datetime.datetime.now()
 
             format_string = "%#I:%M:%S %p"
 
             if datetime_in.day != now.day or datetime_in.year != now.year:
-                format_string = f"%A, %B %#d{day_of_month_suffix(datetime_in.day)}, %Y at {format_string}"
+                format_string = f"%A, %B {day_of_month_string(datetime_in.day)}, %Y at {format_string}"
 
             time_string = datetime_in.strftime(format_string).strip()
             time_string += f" {timezone_name(datetime_in)}"

@@ -1,5 +1,6 @@
 """Provides tools for tracking, computing, and formatting time estimates."""
 import datetime
+from dataclasses import dataclass
 from typing import Any, Annotated, Iterator, Sequence
 from pydantic import NonNegativeInt, Field, validate_call
 
@@ -12,12 +13,12 @@ from .constants import EtaDefaults
 
 
 class Eta:
-    """Holds, computes, and formats ETA state information and time estimate info.
+    """Data class to hold, compute, and format ETA state information and time estimate info.
 
     :param int total_items: The total number of items to process, used in computations.
     :param int item_index: The index of the item about to be processed (0-indexed).
     :param datetime.datetime start_time: The starting time to use for the computation.
-    :param datetime.datetime current_time: The time to use for the computation, defaults to the current time.
+    :param current_time: The time to use for the computation, defaults to the current time.
     :param bool verbose: If we should make strings verbosely or not.
     :param int percent_decimals: The number of decimal places to use in the percentage string.
     :param str not_enough_data_string: The string to return when there is not enough data for the desired computation.
@@ -31,18 +32,16 @@ class Eta:
     :ivar str not_enough_data_string: The string to return when there is not enough data for the desired computation.
 
     :ivar datetime.datetime eta: The estimated completion time.
-    :ivar str eta_string: The estimated completion time as a human-readable sting.
     :ivar datetime.timedelta time_remaining: The time remaining.
-    :ivar str time_remaining_string: The time remaining as a human-readable string.
     :ivar float percentage: The completion percentage.
-    :ivar str percentage_string: The completion percentage as a human-readable string.
     :ivar datetime.timedelta time_taken: The time taken.
+    :ivar str eta_string: The estimated completion time as a human-readable sting.
+    :ivar str time_remaining_string: The time remaining as a human-readable string.
+    :ivar str percentage_string: The completion percentage as a human-readable string.
     :ivar str time_taken_string: The time taken as a human-readable string.
 
     :raises pydantic.ValidationError: Raised when a parameter is invalid.
     :raises IndexError: Raised when the index is too large.
-
-    :rtype: Eta
     """
     @validate_call
     def __init__(
@@ -78,6 +77,7 @@ class Eta:
         self.percentage_string = self._percentage_string()
         self.time_taken = self._time_taken()
         self.time_taken_string = self._time_taken_string()
+
 
     def __str__(self) -> str:
         """Returns the string format of this ETA object.
@@ -275,8 +275,6 @@ class EtaCalculator:
     :ivar str not_enough_data_string: The string to return when there is not enough data for the desired computation.
 
     :raises pydantic.ValidationError: Raised when a parameter is invalid.
-
-    :rtype: EtaCalculator
     """
     @validate_call
     def __init__(

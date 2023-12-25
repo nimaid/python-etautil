@@ -2,7 +2,6 @@
 ### A library for tracking, computing, and formatting time estimates.
 
 ## Basic Usage
-
 ```python
 import time, random
 from etautil.eta import eta_calculator
@@ -46,7 +45,7 @@ Done processing 10 items in 0:01:33!
 You can get more verbose information by replacing the for loop with this:
 
 ```python
-for item, eta in etautil.eta_calculator(range(10), verbose=True):
+for item, eta in eta_calculator(range(10), verbose=True):
 ```
 Here is an example of the verbose output:
 ```
