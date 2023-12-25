@@ -3,20 +3,26 @@ from pydantic import NonNegativeInt, Field, validate_call
 from typing import Any, Annotated
 
 from .timeformat import TimeString
+from .constants import Defaults
 
 # TODO: Add class variables everywhere
+# TODO: Verify the eta object gets set to 100% with the generator
+# TODO: Add a `statistics_string()` method that is focused on all stats (incl. time taken), not just progress
+# TODO: Add eta_bar() wrapper for eta()
+# TODO: Move to `etacalc` package, make `etautil` just a wrapper for compatibility
+# TODO: Publish `timeformat` as a separate package, add custom string formatting features
 
 
 class Eta:
-    """Holds ETA state information and provides methods to compute and format time estimate info.
+    """Holds, computes, and formats ETA state information and time estimate info.
 
     :param int total_items: The total number of items to process, used in computations.
     :param int current_item_index: The index of the item about to be processed (0-indexed).
     :param datetime.datetime start_time: The starting time to use for the computation.
-    :param current_time: The time to use for the computation, defaults to the current time.
+    :param datetime.datetime current_time: The time to use for the computation, defaults to the current time.
     :param bool verbose: If we should make strings verbosely or not.
     :param int percent_decimals: The number of decimal places to use in the percentage string.
-    :param str not_enough_data_string: The string to return when not enough data has been gathered.
+    :param str not_enough_data_string: The string to return when there is not enough data for the desired computation.
 
     :ivar int total_items: The total number of items to process, used in computations.
     :ivar int current_item_index: The index of the item about to be processed (0-indexed).
@@ -24,7 +30,8 @@ class Eta:
     :ivar current_time: The time to use for the computation, defaults to the current time.
     :ivar bool verbose: If we should make strings verbosely or not.
     :ivar int percent_decimals: The number of decimal places to use in the percentage string.
-    :ivar str not_enough_data_string: The string to return when not enough data has been gathered.
+    :ivar str not_enough_data_string: The string to return when there is not enough data for the desired computation.
+
     :ivar datetime.datetime eta: The estimated completion time.
     :ivar str eta_string: The estimated completion time as a human-readable sting.
     :ivar datetime.timedelta time_remaining: The time remaining.
@@ -46,9 +53,9 @@ class Eta:
             current_item_index: NonNegativeInt,
             start_time: datetime.datetime,
             current_time: datetime.datetime = None,
-            verbose: bool = False,
-            percent_decimals: NonNegativeInt = 2,
-            not_enough_data_string: str = "not enough data"
+            verbose: bool = Defaults.verbose,
+            percent_decimals: NonNegativeInt = Defaults.percent_decimals,
+            not_enough_data_string: str = Defaults.not_enough_data_string
     ):
         if current_time is None:
             current_time = datetime.datetime.now()
@@ -88,7 +95,7 @@ class Eta:
         :return: The user-friendly progress string.
         :rtype: str
         """
-        return self.progress_string()
+        return self.__str__()
 
     def _validate_item_index(
             self,
@@ -99,7 +106,9 @@ class Eta:
         Index type and positivity are not validated in this private method because pydantic handles it elsewhere.
 
         :param int item_index: The index to test.
+
         :raises IndexError: Raised when the index is too large.
+
         :rtype: None
         """
         if item_index > self.total_items - 1:
@@ -107,7 +116,6 @@ class Eta:
 
     def _eta(self) -> datetime.datetime | None:
         """Compute the ETA and return it as a datetime.datetime object.
-
 
         :return: The ETA as a datetime.datetime object.
         :rtype: datetime.datetime
@@ -189,10 +197,10 @@ class Eta:
         return self.current_time - self.start_time
 
     def _time_taken_string(self) -> str:
-        """Compute the time taken and return it as a datetime.timedelta object.
+        """Compute the time taken and return it as a string.
 
         :return: The time taken as a datetime.timedelta object.
-        :rtype: datetime.timedelta
+        :rtype: str
         """
         if self.verbose:
             return TimeString.TimeDelta.long(self.time_taken)
@@ -202,8 +210,17 @@ class Eta:
     @validate_call
     def progress_string(
             self,
-            sep: str = " | "
+            sep: str = Defaults.sep
     ) -> str:
+        """Combine the most useful stats into a string focused on conveying progress and return it.
+
+        :param str sep: The string to use as a seperator between fields.
+
+        :raises pydantic.ValidationError: Raised when a parameter is invalid.
+
+        :return: A human-readable string that includes (in order) percentage, time remaining, and ETA.
+        :rtype: str
+        """
         percent_string = self._percentage_string()
 
         if self.current_item_index <= 0:
@@ -225,7 +242,16 @@ class EtaCalculator:
     :param datetime.datetime start_time: The starting time used in all calculations, defaults to the current time.
     :param bool verbose: If we should make strings verbosely or not.
     :param int percent_decimals: The number of decimal places to use in the percentage string.
+    :param str not_enough_data_string: The string to return when there is not enough data for the desired computation.
+
+    :ivar int total_items: The total number of items to process, used in computations.
+    :ivar datetime.datetime start_time: The starting time used in all calculations, defaults to the current time.
+    :ivar bool verbose: If we should make strings verbosely or not.
+    :ivar int percent_decimals: The number of decimal places to use in the percentage string.
+    :ivar str not_enough_data_string: The string to return when there is not enough data for the desired computation.
+
     :raises pydantic.ValidationError: Raised when a parameter is invalid.
+
     :rtype: EtaCalculator
     """
     @validate_call
@@ -233,9 +259,9 @@ class EtaCalculator:
             self,
             total_items: Annotated[NonNegativeInt, Field(gt=1)],
             start_time: datetime.datetime = None,
-            verbose: bool = False,
-            percent_decimals: NonNegativeInt = 2,
-            not_enough_data_string: str = "Not enough data."
+            verbose: bool = Defaults.verbose,
+            percent_decimals: NonNegativeInt = Defaults.percent_decimals,
+            not_enough_data_string: str = Defaults.not_enough_data_string
     ):
         if start_time is None:
             start_time = datetime.datetime.now()
@@ -256,7 +282,7 @@ class EtaCalculator:
         self.set_not_enough_data_string(not_enough_data_string)
 
     def __str__(self) -> str:
-        """Returns the string format of this ETA object.
+        """Return the string format of this ETA calculator object.
 
         :return: The user-friendly string representing the calculator object.
         :rtype: str
@@ -266,12 +292,31 @@ class EtaCalculator:
                 f"verbose = {self.verbose}, "
                 f"percentage decimal places = {self.percent_decimals}")
 
+    def __repr__(self) -> str:
+        """Return the string format of this ETA calculator object.
+
+        :return: The user-friendly string representing the calculator object.
+        :rtype: str
+        """
+        return self.__str__()
+
     @validate_call
     def get_eta(
             self,
             current_item_index: NonNegativeInt,
             current_time: datetime.datetime = None
     ) -> Eta:
+        """Get the current ETA calculation and return it as an Eta object.
+
+        :param int current_item_index: The index of the item about to be processed (0-indexed).
+        :param datetime.datetime current_time: The time to use for the computation, defaults to the current time.
+
+        :raises pydantic.ValidationError: Raised when a parameter is invalid.
+        :raises IndexError: Raised when the index is too large.
+
+        :return: The current ETA calculation as an Eta object.
+        :rtype: Eta
+        """
         if current_time is None:
             current_time = datetime.datetime.now()
 
@@ -292,7 +337,9 @@ class EtaCalculator:
         """Set the total number of items to process.
 
         :param int total_items: The total number of items to process, used in computations.
+
         :raises pydantic.ValidationError: Raised when a parameter is invalid.
+        
         :rtype: None
         """
         self.total_items = total_items
@@ -302,6 +349,14 @@ class EtaCalculator:
             self,
             start_time: datetime.datetime = None
     ) -> None:
+        """Set the start time.
+
+        :param datetime.datetime start_time: The starting time to use for the computation.
+
+        :raises pydantic.ValidationError: Raised when a parameter is invalid.
+
+        :rtype: None
+        """
         if start_time is None:
             start_time = datetime.datetime.now()
 
@@ -333,9 +388,9 @@ class EtaCalculator:
 def eta(
         items: Any,
         start_time: datetime.datetime = None,
-        verbose: bool = False,
-        percent_decimals: NonNegativeInt = 2,
-        not_enough_data_string: str = "Not enough data."
+        verbose: bool = Defaults.verbose,
+        percent_decimals: NonNegativeInt = Defaults.percent_decimals,
+        not_enough_data_string: str = Defaults.not_enough_data_string
 ) -> tuple[Any, Eta]:
     if start_time is None:
         start_time = datetime.datetime.now()
