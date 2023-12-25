@@ -18,11 +18,11 @@ import etautil
 def process_item(item):
     time.sleep(random.random() * 20)
 
-eta = None  # Initialize here so we can use it outside the loop
-for item, eta in etautil.eta(range(10)):
+eta = None # Initialize the eta variable here so we can use it outside the loop
+for item, eta in etautil.eta(range(10)):  # Creates a new etautil.Eta object for each item
     print(eta)  # Print the current progress stats
-    process_item(item)
-eta.complete()  # Set the Eta object to completed, using now as the end time
+    process_item(item)  # Do your processing here
+eta.complete()  # Update the last etautil.Eta object created to completed, using now as the end time
     
 print(f"Done processing {eta.total_items} items in {eta.time_taken_string}!\n")
 ```
