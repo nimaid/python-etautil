@@ -1,12 +1,11 @@
+"""Provides tools for tracking, computing, and formatting time estimates."""
 import datetime
-from pydantic import NonNegativeInt, Field, validate_call
 from typing import Any, Annotated
+from pydantic import NonNegativeInt, Field, validate_call
 
-from .timeformat import TimeString
-from .constants import Defaults
+from .time import TimeString
+from .constants import EtaDefaults
 
-# TODO: Add class variables everywhere
-# TODO: Verify the eta object gets set to 100% with the generator
 # TODO: Add a `statistics_string()` method that is focused on all stats (incl. time taken), not just progress
 # TODO: Add eta_bar() wrapper for eta()
 # TODO: Move to `etacalc` package, make `etautil` just a wrapper for compatibility
@@ -53,9 +52,9 @@ class Eta:
             item_index: NonNegativeInt,
             start_time: datetime.datetime,
             current_time: datetime.datetime = None,
-            verbose: bool = Defaults.verbose,
-            percent_decimals: NonNegativeInt = Defaults.percent_decimals,
-            not_enough_data_string: str = Defaults.not_enough_data_string
+            verbose: bool = EtaDefaults.verbose,
+            percent_decimals: NonNegativeInt = EtaDefaults.percent_decimals,
+            not_enough_data_string: str = EtaDefaults.not_enough_data_string
     ):
         if current_time is None:
             current_time = datetime.datetime.now()
@@ -137,8 +136,8 @@ class Eta:
 
         if self.verbose:
             return TimeString.DateTime.long(self.eta)
-        else:
-            return TimeString.DateTime.short(self.eta)
+
+        return TimeString.DateTime.short(self.eta)
 
     def _time_remaining(self) -> datetime.timedelta | None:
         """Compute the time remaining and return it as a datetime.timedelta object.
@@ -165,8 +164,8 @@ class Eta:
 
         if self.verbose:
             return TimeString.TimeDelta.long(self.time_remaining)
-        else:
-            return TimeString.TimeDelta.short(self.time_remaining)
+
+        return TimeString.TimeDelta.short(self.time_remaining)
 
     def _percentage(self) -> float:
         """Compute the completion percentage and return it as a float.
@@ -204,13 +203,13 @@ class Eta:
         """
         if self.verbose:
             return TimeString.TimeDelta.long(self.time_taken)
-        else:
-            return TimeString.TimeDelta.short(self.time_taken)
+
+        return TimeString.TimeDelta.short(self.time_taken)
 
     @validate_call
     def progress_string(
             self,
-            sep: str = Defaults.sep
+            sep: str = EtaDefaults.sep
     ) -> str:
         """Combine the most useful stats into a string focused on conveying progress and return it.
 
@@ -239,11 +238,11 @@ class Eta:
             self,
             current_time: datetime.datetime = None,
     ) -> None:
-        """Set the ETA item to completed (100%)
+        """Set the ETA item to completed (100%).
 
         :param datetime.datetime current_time: The time to use for the computation, defaults to the current time.
 
-        :return:
+        :rtype: None
         """
         if current_time is None:
             current_time = datetime.datetime.now()
@@ -285,9 +284,9 @@ class EtaCalculator:
             self,
             total_items: Annotated[NonNegativeInt, Field(gt=1)],
             start_time: datetime.datetime = None,
-            verbose: bool = Defaults.verbose,
-            percent_decimals: NonNegativeInt = Defaults.percent_decimals,
-            not_enough_data_string: str = Defaults.not_enough_data_string
+            verbose: bool = EtaDefaults.verbose,
+            percent_decimals: NonNegativeInt = EtaDefaults.percent_decimals,
+            not_enough_data_string: str = EtaDefaults.not_enough_data_string
     ):
         if start_time is None:
             start_time = datetime.datetime.now()
@@ -365,7 +364,7 @@ class EtaCalculator:
         :param int total_items: The total number of items to process, used in computations.
 
         :raises pydantic.ValidationError: Raised when a parameter is invalid.
-        
+
         :rtype: None
         """
         self.total_items = total_items
@@ -419,12 +418,12 @@ class EtaCalculator:
 
 
 @validate_call
-def eta(
+def eta_calculator(
         items: Any,
         start_time: datetime.datetime = None,
-        verbose: bool = Defaults.verbose,
-        percent_decimals: NonNegativeInt = Defaults.percent_decimals,
-        not_enough_data_string: str = Defaults.not_enough_data_string
+        verbose: bool = EtaDefaults.verbose,
+        percent_decimals: NonNegativeInt = EtaDefaults.percent_decimals,
+        not_enough_data_string: str = EtaDefaults.not_enough_data_string
 ) -> tuple[Any, Eta]:
     if start_time is None:
         start_time = datetime.datetime.now()

@@ -1,4 +1,4 @@
-"""Provides tools to format various datetime objects into human-readable strings."""
+"""Provides tools to manipulate and format various time-based objects."""
 import datetime
 from pydantic import NonNegativeInt, NonNegativeFloat, PositiveInt, validate_call
 
@@ -49,9 +49,9 @@ def timezone_name(datetime_in: datetime.datetime) -> str:
 
 
 class TimeString:
-    """Container class with methods to process time-based objects and return human-readable strings."""
+    """Container class with methods to format various datetime objects into human-readable strings."""
     class TimeDelta:
-        """Container class with methods to process datetime.timedelta objects and return human-readable strings."""
+        """Container class with methods to format datetime.timedelta objects and return human-readable strings."""
         @staticmethod
         @validate_call
         def short(timedelta_in: datetime.timedelta) -> str:
@@ -110,7 +110,7 @@ class TimeString:
             return time_string
 
     class DateTime:
-        """Container class with methods to process datetime.datetime objects and return human-readable strings."""
+        """Container class with methods to format datetime.datetime objects and return human-readable strings."""
         @staticmethod
         @validate_call
         def short(datetime_in: datetime.datetime) -> str:

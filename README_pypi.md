@@ -2,21 +2,29 @@
 ### A library for tracking, computing, and formatting time estimates.
 
 ## Basic Usage
+
 ```python
 import time, random
-import etautil
+from etautil import eta_calculator
 
 
 # Just a placeholder function that takes a random amount of time
 def process_item(item):
     time.sleep(random.random() * 20)
 
-eta = None # Initialize the eta variable here so we can use it outside the loop
-for item, eta in etautil.eta(range(10)):  # Creates a new etautil.Eta object for each item
+
+for item, eta in eta_calculator(range(10)):  # Creates a new etautil.Eta object for each item
     print(eta)  # Print the current progress stats
     process_item(item)  # Do your processing here
-eta.complete()  # Update the last etautil.Eta object created to completed, using now as the end time
-    
+```
+If you want to access the eta stats outside the loop, you can use this pattern to do so:
+```python
+eta = None  # Initialize the eta variable here, so we can use it outside the loop
+for item, eta in eta_calculator(range(10)):
+    print(eta)
+    process_item(item)
+eta.complete()  # Update the last created etautil.Eta object to completed, using now as the end time
+
 print(f"Done processing {eta.total_items} items in {eta.time_taken_string}!\n")
 ```
 
@@ -36,8 +44,9 @@ Done processing 10 items in 0:01:33!
 ```
 
 You can get more verbose information by replacing the for loop with this:
+
 ```python
-for item, eta in etautil.eta(range(10), verbose=True):
+for item, eta in etautil.eta_calculator(range(10), verbose=True):
 ```
 Here is an example of the verbose output:
 ```
